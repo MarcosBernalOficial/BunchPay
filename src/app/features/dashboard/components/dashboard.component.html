@@ -1,0 +1,17 @@
+<div class="min-h-screen flex items-center justify-center bg-black text-white p-6">
+  <div class="max-w-2xl w-full space-y-6 border border-white/20 rounded-xl p-6">
+    <h1 class="text-2xl font-bold">Bienvenido{{ user ? ", " + user.nombre : '' }}</h1>
+    <p>
+      Rol actual: <span class="font-mono px-2 py-1 rounded bg-white/10">{{ user?.rol }}</span>
+    </p>
+
+    <div *ngIf="user?.rol === Role.ADMIN; else general">
+      <h2 class="text-xl font-semibold">Panel de administración</h2>
+      <p class="text-white/80">Aquí irán accesos y métricas administrativas.</p>
+    </div>
+    <ng-template #general>
+      <h2 class="text-xl font-semibold">Panel</h2>
+      <p class="text-white/80">Aquí irá el dashboard general según el rol.</p>
+    </ng-template>
+  </div>
+</div>

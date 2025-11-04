@@ -1,0 +1,136 @@
+<div class="min-h-screen flex items-center justify-center bg-black py-12 px-4 sm:px-6 lg:px-8 ">
+    <div class="max-w-md w-full space-y-8 border-l border-r border-white/20 px-3 hover:border-white transition-colors duration-1000">
+        <!-- Tituloi -->
+        <div class="text-center relative flex justify-center items-center w-full">
+            <h2 class="m-4 py-4 px-10 text-3xl font-extrabold border-2 border-white text-white hover:scale-105 transition-transform duration-1000 rounded-2xl">BunchPay .</h2>
+        </div>
+
+        <!-- Formulario -->
+        <div class="bg-black p-6 text-white">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6 bg-black">
+            <div formGroupName="credentials" class="space-y-6">
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-white mb-2">Correo electrónico</label>
+                    <input 
+                        id="email" 
+                        name="email" 
+                        type="email" 
+                        formControlName="email"
+                        class="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-white/50 focus:border-white/50 transition-colors bg-black text-white"
+                        [class.border-red-500]="loginForm.get('credentials.email')?.invalid && loginForm.get('credentials.email')?.touched"
+                        placeholder="tu@email.com"
+                    />
+                    @if (loginForm.get('credentials.email')?.invalid && loginForm.get('credentials.email')?.touched) {
+                        <div class="mt-1 text-sm text-red-300">
+                            @if (loginForm.get('credentials.email')?.errors?.['required']) {
+                                <span>El email es requerido</span>
+                            }
+                            @if (loginForm.get('credentials.email')?.errors?.['email']) {
+                                <span>Ingrese un email válido</span>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-white mb-2">Contraseña</label>
+                    <div class="relative">
+                        <input 
+                            id="password" 
+                            name="password" 
+                            [type]="showPassword ? 'text' : 'password'" 
+                            formControlName="password"
+                            class="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-white/50 focus:border-white/50 transition-colors bg-black text-white"
+                            [class.border-red-500]="loginForm.get('credentials.password')?.invalid && loginForm.get('credentials.password')?.touched"
+                            placeholder="••••••••"
+                        />
+                        <button 
+                            type="button"
+                            (click)="togglePassword()"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-grayLight hover:text-white transition-colors duration-200"
+                        >
+                            @if (!showPassword) {
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                            }
+                            @if (showPassword) {
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+                                </svg>
+                            }
+                        </button>
+                    </div>
+                    @if (loginForm.get('credentials.password')?.touched) {
+                        <div class="mt-1 text-sm text-red-300 space-y-1">
+                            @if (loginForm.get('credentials.password')?.errors?.['required']) {
+                                <span>La contraseña es requerida</span>
+                            }
+                            @if (loginForm.get('credentials.password')?.errors?.['minlength']) {
+                                <span>La contraseña debe tener al menos 8 caracteres</span>
+                            }
+                            @if (passwordPatternError) {
+                                <div>La contraseña debe incluir:</div>
+                                <ul class="list-disc ml-5">
+                                    @if (needsLowercase) { <li>Una letra minúscula</li> }
+                                    @if (needsUppercase) { <li>Una letra mayúscula</li> }
+                                    @if (needsNumber) { <li>Un número</li> }
+                                </ul>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="text-sm">
+                <a href="#" class="font-medium text-white hover:underline">
+                ¿Olvidaste tu contraseña?
+                </a>
+            </div>
+
+            <!-- Submit button -->
+            <div>
+                <button 
+                    type="submit" 
+                    [disabled]="loginForm.invalid || isLoading"
+                    class=" w-full bg-black text-white py-3 px-4 border border-white/50 rounded-xl hover:bg-white hover:text-black transition-all duration-300 font-medium"
+                >
+                    {{ isLoading ? 'Iniciando...' : 'Iniciar Sesión' }}
+                </button>
+            </div>
+
+            <!-- Error message -->
+            @if (errorMessage) {
+            <div class="rounded-md bg-red-50 p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                </div>
+                <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">Error de autenticación</h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <p>{{ errorMessage }}</p>
+                        </div>
+                </div>
+            </div>
+            </div>
+            }
+        </form>
+        </div>
+
+        <!-- Register link -->
+        <div class="text-center">
+        <p class="text-sm text-grayLight">
+            ¿No tienes una cuenta?
+            <a routerLink="/auth/register" class="font-medium text-white hover:underline">
+            Regístrate aquí
+            </a>
+        </p>
+        </div>
+    </div>
+</div>

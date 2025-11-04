@@ -1,0 +1,237 @@
+<div class="min-h-screen flex items-center justify-center bg-black py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl w-full space-y-6 border-l border-r border-white/20 px-6 hover:border-white transition-colors duration-1000">
+        <!-- Logo y título -->
+        <div class="text-center relative flex justify-center items-center w-full">
+            <h2 class="m-4 py-4 px-10 text-3xl font-extrabold border-2 border-white text-white rounded-2xl">BunchPay .</h2>
+        </div>
+
+        <!-- Formulario -->
+        <div class="bg-black p-6 text-white">
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="bg-black">
+                <!-- Grid de dos columnas -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    
+                    <!-- Columna Izquierda: Datos personales -->
+                    <div class="space-y-6" formGroupName="personal">
+                        <!-- Nombre -->
+                        <div>
+                            <label for="firstName" class="block text-sm font-medium text-white mb-2">Nombre</label>
+                            <input 
+                                id="firstName" 
+                                name="firstName" 
+                                type="text" 
+                                formControlName="firstName"
+                                class="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-white/50 focus:border-white/50 transition-colors bg-black text-white"
+                                [class.border-red-500]="registerForm.get('personal.firstName')?.invalid && registerForm.get('personal.firstName')?.touched"
+                                placeholder="Tu nombre"
+                            />
+                            @if (registerForm.get('personal.firstName')?.invalid && registerForm.get('personal.firstName')?.touched) {
+                                <div class="mt-1 text-sm text-red-300">
+                                    @if (registerForm.get('personal.firstName')?.errors?.['required']) {
+                                        <span>El nombre es requerido</span>
+                                    }
+                                    @if (registerForm.get('personal.firstName')?.errors?.['minlength']) {
+                                        <span>El nombre debe tener al menos 2 caracteres</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Apellido -->
+                        <div>
+                            <label for="lastName" class="block text-sm font-medium text-white mb-2">Apellido</label>
+                            <input 
+                                id="lastName" 
+                                name="lastName" 
+                                type="text" 
+                                formControlName="lastName"
+                                class="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-white/50 focus:border-white/50 transition-colors bg-black text-white"
+                                [class.border-red-500]="registerForm.get('personal.lastName')?.invalid && registerForm.get('personal.lastName')?.touched"
+                                placeholder="Tu apellido"
+                            />
+                            @if (registerForm.get('personal.lastName')?.invalid && registerForm.get('personal.lastName')?.touched) {
+                                <div class="mt-1 text-sm text-red-300">
+                                    @if (registerForm.get('personal.lastName')?.errors?.['required']) {
+                                        <span>El apellido es requerido</span>
+                                    }
+                                    @if (registerForm.get('personal.lastName')?.errors?.['minlength']) {
+                                        <span>El apellido debe tener al menos 2 caracteres</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <!-- DNI -->
+                        <div>
+                            <label for="dni" class="block text-sm font-medium text-white mb-2">DNI</label>
+                            <input 
+                                id="dni" 
+                                name="dni" 
+                                type="text" 
+                                formControlName="dni"
+                                class="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-white/50 focus:border-white/50 transition-colors bg-black text-white"
+                                [class.border-red-500]="registerForm.get('personal.dni')?.invalid && registerForm.get('personal.dni')?.touched"
+                                placeholder="12345678"
+                                maxlength="8"
+                            />
+                            @if (registerForm.get('personal.dni')?.invalid && registerForm.get('personal.dni')?.touched) {
+                                <div class="mt-1 text-sm text-red-300">
+                                    @if (registerForm.get('personal.dni')?.errors?.['required']) {
+                                        <span>El DNI es requerido</span>
+                                    }
+                                    @if (registerForm.get('personal.dni')?.errors?.['pattern']) {
+                                        <span>El DNI debe tener 8 dígitos numericos</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        
+
+                    </div>
+
+                    <!-- Columna Derecha: Credenciales y acciones -->
+                    <div class="space-y-6" formGroupName="credentials">
+                        <!-- Email -->
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-white mb-2">Correo electrónico</label>
+                            <input 
+                                id="email" 
+                                name="email" 
+                                type="email" 
+                                formControlName="email"
+                                class="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-white/50 focus:border-white/50 transition-colors bg-black text-white"
+                                [class.border-red-500]="registerForm.get('credentials.email')?.invalid && registerForm.get('credentials.email')?.touched"
+                                placeholder="tu@email.com"
+                            />
+                            @if (registerForm.get('credentials.email')?.invalid && registerForm.get('credentials.email')?.touched) {
+                                <div class="mt-1 text-sm text-red-300">
+                                    @if (registerForm.get('credentials.email')?.errors?.['required']) {
+                                        <span>El email es requerido</span>
+                                    }
+                                    @if (registerForm.get('credentials.email')?.errors?.['email']) {
+                                        <span>Ingrese un email válido</span>
+                                    }
+                                    @if (registerForm.get('credentials.email')?.errors?.['conflict']) {
+                                        <span>El correo ya está registrado</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Contraseña -->
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-white mb-2">Contraseña</label>
+                            <div class="relative">
+                                <input 
+                                    id="password" 
+                                    name="password" 
+                                    [type]="showPassword ? 'text' : 'password'"
+                                    formControlName="password"
+                                    class="w-full px-3 py-2 pr-10 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-white/50 focus:border-white/50 transition-colors bg-black text-white"
+                                    [class.border-red-500]="registerForm.get('credentials.password')?.invalid && registerForm.get('credentials.password')?.touched"
+                                    placeholder="Tu contraseña"
+                                />
+                                <button 
+                                    type="button" 
+                                    (click)="showPassword = !showPassword"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-white hover:text-gray-300"
+                                >
+                                    <svg *ngIf="!showPassword" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                    <svg *ngIf="showPassword" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div *ngIf="registerForm.get('credentials.password')?.touched" class="mt-1 text-sm text-red-300 space-y-1">
+                                <span *ngIf="registerForm.get('credentials.password')?.errors?.['required']">La contraseña es requerida</span>
+                                <span *ngIf="registerForm.get('credentials.password')?.errors?.['minlength']">La contraseña debe tener al menos 8 caracteres</span>
+                                <ng-container *ngIf="passwordPatternError">
+                                    <div>La contraseña debe incluir:</div>
+                                    <ul class="list-disc ml-5">
+                                        <li *ngIf="needsLowercase">Una letra minúscula</li>
+                                        <li *ngIf="needsUppercase">Una letra mayúscula</li>
+                                        <li *ngIf="needsNumber">Un número</li>
+                                    </ul>
+                                </ng-container>
+                            </div>
+                        </div>
+
+                        <!-- Confirmar Contraseña -->
+                        <div>
+                            <label for="confirmPassword" class="block text-sm font-medium text-white mb-2">Confirmar contraseña</label>
+                            <div class="relative">
+                                <input 
+                                    id="confirmPassword" 
+                                    name="confirmPassword" 
+                                    [type]="showConfirmPassword ? 'text' : 'password'"
+                                    formControlName="confirmPassword"
+                                    class="w-full px-3 py-2 pr-10 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-white/50 focus:border-white/50 transition-colors bg-black text-white"
+                                    [class.border-red-500]="registerForm.get('credentials.confirmPassword')?.invalid && registerForm.get('credentials.confirmPassword')?.touched"
+                                    placeholder="Confirma tu contraseña"
+                                />
+                                <button 
+                                    type="button" 
+                                    (click)="showConfirmPassword = !showConfirmPassword"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-white hover:text-gray-300"
+                                >
+                                    <svg *ngIf="!showConfirmPassword" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                    <svg *ngIf="showConfirmPassword" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div *ngIf="registerForm.get('credentials.confirmPassword')?.invalid && registerForm.get('credentials.confirmPassword')?.touched" 
+                                    class="mt-1 text-sm text-red-300">
+                                <span *ngIf="registerForm.get('confirmPassword')?.errors?.['required']">Confirme su contraseña</span>
+                            </div>
+                            <div *ngIf="registerForm.get('credentials')?.errors?.['passwordMismatch'] && registerForm.get('credentials.confirmPassword')?.touched" 
+                                    class="mt-1 text-sm text-red-300">
+                                Las contraseñas no coinciden
+                            </div>
+                        </div>
+
+                        
+
+                        <!-- Botón de registro -->
+                        <div>
+                            <button 
+                                type="submit" 
+                                [disabled]="registerForm.invalid || isLoading"
+                                class="group  w-full bg-black text-white py-3 px-4 border border-white/50 rounded-xl hover:bg-white hover:text-black transition-all duration-300 font-medium cursor-pointer"
+                            >
+                                {{ isLoading ? 'Creando cuenta...' : 'Crear cuenta' }}
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Login link (en la columna izquierda) -->
+                        <div class="text-center w-full lg:col-span-2">
+                            <p class="text-sm text-grayLight">
+                                ¿Ya tienes una cuenta?
+                                <a routerLink="/auth/login" class="font-medium text-white hover:underline">
+                                    Inicia sesión aquí
+                                </a>
+                            </p>
+                        </div>
+                </div>
+            </form>
+
+
+        </div>
+
+        <!-- Mensajes de error/éxito -->
+        <div *ngIf="errorMessage" class="mt-4 p-3 bg-red-900/50 border border-red-700 rounded-md">
+            <p class="text-sm text-red-300">{{ errorMessage }}</p>
+        </div>
+
+        <div *ngIf="successMessage" class="mt-4 p-3 bg-green-900/50 border border-green-700 rounded-md">
+            <p class="text-sm text-green-300">{{ successMessage }}</p>
+        </div>
+    </div>
+</div>

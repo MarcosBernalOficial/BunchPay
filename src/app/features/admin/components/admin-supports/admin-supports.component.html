@@ -1,0 +1,169 @@
+<div class="min-h-screen bg-black text-white p-6 space-y-8">
+  <div class="flex items-center gap-4">
+    <h2 class="text-2xl font-bold">Administración de Soportes</h2>
+    <button class="ml-auto px-3 py-1 border border-white/40 rounded hover:bg-white hover:text-black transition" (click)="logout()">Cerrar sesión</button>
+  </div>
+
+  <!-- Crear soporte -->
+  <section class="border border-white/20 rounded-lg p-4">
+    <h3 class="text-lg font-semibold mb-4">Crear nuevo soporte</h3>
+    <form [formGroup]="createForm" (ngSubmit)="onCreate()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div formGroupName="personal" class="space-y-4">
+        <div>
+          <label class="block text-sm mb-1">Nombre</label>
+          <input class="w-full px-3 py-2 bg-black border border-white/30 rounded" formControlName="firstName" placeholder="Nombre" />
+          @if (createForm.get('personal.firstName')?.invalid && createForm.get('personal.firstName')?.touched) {
+            <div class="text-red-400 text-sm mt-1">
+              @if (createForm.get('personal.firstName')?.errors?.['required']) { <span>Requerido</span> }
+              @if (createForm.get('personal.firstName')?.errors?.['minlength']) { <span>Mínimo 2 caracteres</span> }
+            </div>
+          }
+        </div>
+        <div>
+          <label class="block text-sm mb-1">Apellido</label>
+          <input class="w-full px-3 py-2 bg-black border border-white/30 rounded" formControlName="lastName" placeholder="Apellido" />
+          @if (createForm.get('personal.lastName')?.invalid && createForm.get('personal.lastName')?.touched) {
+            <div class="text-red-400 text-sm mt-1">
+              @if (createForm.get('personal.lastName')?.errors?.['required']) { <span>Requerido</span> }
+              @if (createForm.get('personal.lastName')?.errors?.['minlength']) { <span>Mínimo 2 caracteres</span> }
+            </div>
+          }
+        </div>
+      </div>
+
+      <div formGroupName="credentials" class="space-y-4">
+        <div>
+          <label class="block text-sm mb-1">Email</label>
+          <input class="w-full px-3 py-2 bg-black border border-white/30 rounded" formControlName="email" placeholder="correo@empresa.com" />
+          @if (createForm.get('credentials.email')?.touched) {
+            <div class="text-red-400 text-sm mt-1 space-y-1">
+              @if (createForm.get('credentials.email')?.errors?.['required']) { <div>El email es requerido</div> }
+              @if (createForm.get('credentials.email')?.errors?.['email']) { <div>Formato inválido</div> }
+              @if (createForm.get('credentials.email')?.errors?.['conflict']) { <div>El correo ya está registrado</div> }
+            </div>
+          }
+        </div>
+        <div>
+          <label class="block text-sm mb-1">Contraseña</label>
+          <div class="relative">
+            <input [type]="showCreatePassword ? 'text' : 'password'" class="w-full px-3 py-2 bg-black border border-white/30 rounded" formControlName="password" placeholder="Contraseña" />
+            <button type="button" (click)="showCreatePassword = !showCreatePassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-white/70 hover:text-white">
+              @if (!showCreatePassword) {
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+              }
+              @if (showCreatePassword) {
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+                </svg>
+              }
+            </button>
+          </div>
+          @if (createForm.get('credentials.password')?.touched) {
+            <div class="text-red-400 text-sm mt-1 space-y-1">
+              @if (createForm.get('credentials.password')?.errors?.['required']) { <div>Requerida</div> }
+              @if (createForm.get('credentials.password')?.errors?.['minlength']) { <div>Mínimo 8 caracteres</div> }
+              @if (createPasswordPatternError) {
+                <div>Debe incluir al menos:</div>
+                <ul class="list-disc ml-5">
+                  @if (createNeedsLowercase) { <li>Una minúscula</li> }
+                  @if (createNeedsUppercase) { <li>Una mayúscula</li> }
+                  @if (createNeedsNumber) { <li>Un número</li> }
+                  @if (createNeedsSpecial) { <li>Un carácter especial</li> }
+                </ul>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="md:col-span-2">
+        <button [disabled]="createForm.invalid || isLoading" type="submit" class="px-4 py-2 border border-white/40 rounded hover:bg-white hover:text-black transition">{{ isLoading ? 'Creando...' : 'Crear soporte' }}</button>
+      </div>
+    </form>
+
+    @if (errorMessage) {
+      <div class="mt-3 p-2 border border-red-400 text-red-300 rounded">{{ errorMessage }}</div>
+    }
+    @if (successMessage) {
+      <div class="mt-3 p-2 border border-green-400 text-green-300 rounded">{{ successMessage }}</div>
+    }
+  </section>
+
+  <!-- Listado -->
+  <section class="border border-white/20 rounded-lg p-4">
+    <h3 class="text-lg font-semibold mb-4">Soportes existentes</h3>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead class="text-sm opacity-70 border-b border-white/20">
+          <tr>
+            <th class="py-2">Nombre</th>
+            <th class="py-2">Email</th>
+            <th class="py-2">Rol</th>
+            <th class="py-2 w-40">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let s of supports" class="border-b border-white/10 align-top">
+            <td class="py-2">
+              <div class="font-medium">{{ s.firstName }} {{ s.lastName }}</div>
+              
+              <!-- Editor inline -->
+              @if (editing?.id === s.id) {
+                <form [formGroup]="editForm" class="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
+                  <input class="px-2 py-1 bg-black border border-white/30 rounded" placeholder="Nombre" formControlName="firstName" />
+                  <input class="px-2 py-1 bg-black border border-white/30 rounded" placeholder="Apellido" formControlName="lastName" />
+                  <div class="relative">
+                    <input [type]="showEditPassword ? 'text' : 'password'" class="w-full px-2 py-1 bg-black border border-white/30 rounded" placeholder="Nueva contraseña (opcional)" formControlName="password" />
+                    <button type="button" (click)="showEditPassword = !showEditPassword" class="absolute inset-y-0 right-0 pr-2 flex items-center text-white/70 hover:text-white">
+                      @if (!showEditPassword) {
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                      }
+                      @if (showEditPassword) {
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+                        </svg>
+                      }
+                    </button>
+                  </div>
+                  <div class="md:col-span-3 text-red-400 text-sm space-y-1" *ngIf="editPasswordCtrl?.touched && editPasswordCtrl?.errors && editPasswordValue">
+                    @if (editPasswordCtrl?.errors?.['minlength']) { <div>Mínimo 8 caracteres</div> }
+                    @if (editPasswordPatternError) {
+                      <div>Debe incluir al menos:</div>
+                      <ul class="list-disc ml-5">
+                        @if (editNeedsLowercase) { <li>Una minúscula</li> }
+                        @if (editNeedsUppercase) { <li>Una mayúscula</li> }
+                        @if (editNeedsNumber) { <li>Un número</li> }
+                        @if (editNeedsSpecial) { <li>Un carácter especial</li> }
+                      </ul>
+                    }
+                  </div>
+                  <div class="md:col-span-3 flex gap-2">
+                    <button type="button" (click)="saveEdit()" class="px-3 py-1 border border-white/40 rounded">Guardar</button>
+                    <button type="button" (click)="cancelEdit()" class="px-3 py-1 border border-white/40 rounded">Cancelar</button>
+                  </div>
+                </form>
+              }
+            </td>
+            <td class="py-2">{{ s.email }}</td>
+            <td class="py-2">{{ s.role }}</td>
+            <td class="py-2">
+              <div class="flex gap-2">
+                <button class="px-3 py-1 border border-white/40 rounded" (click)="beginEdit(s)" [disabled]="editing && editing.id !== s.id">Editar</button>
+                <button class="px-3 py-1 border border-red-400 text-red-300 rounded" (click)="remove(s)">Eliminar</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      @if (!supports.length && !isLoading) {
+        <div class="text-sm opacity-60 mt-2">No hay soportes creados.</div>
+      }
+    </div>
+  </section>
+</div>

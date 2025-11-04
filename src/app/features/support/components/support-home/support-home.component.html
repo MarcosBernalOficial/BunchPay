@@ -1,0 +1,55 @@
+<div class="min-h-screen flex bg-black text-white">
+  <div class="w-1/3 border-r border-white/20 p-4 space-y-4">
+    <div class="flex gap-2">
+      <button (click)="tab='unassigned'" [class.bg-white]="tab==='unassigned'" [class.text-black]="tab==='unassigned'" class="px-3 py-1 rounded border border-white/40">Sin asignar</button>
+      <button (click)="tab='my'" [class.bg-white]="tab==='my'" [class.text-black]="tab==='my'" class="px-3 py-1 rounded border border-white/40">Mis chats</button>
+      <button (click)="refreshLists()" class="ml-auto px-3 py-1 rounded border border-white/40">Refrescar</button>
+    </div>
+
+    <!-- Listas -->
+    <div *ngIf="tab==='unassigned'" class="space-y-2">
+      <div *ngFor="let c of unassigned" (click)="pick(c)" class="p-3 rounded border border-white/20 hover:border-white/60 cursor-pointer">
+        <div class="text-sm opacity-80">{{ c.clientEmail }}</div>
+        <div class="font-medium">{{ c.clientName || 'Cliente' }}</div>
+      </div>
+      <div *ngIf="!unassigned.length" class="text-sm opacity-60">No hay chats sin asignar</div>
+    </div>
+
+    <div *ngIf="tab==='my'" class="space-y-2">
+      <div *ngFor="let c of myChats" (click)="pick(c)" class="p-3 rounded border border-white/20 hover:border-white/60 cursor-pointer">
+        <div class="text-sm opacity-80">{{ c.clientEmail }}</div>
+        <div class="font-medium">{{ c.clientName || 'Cliente' }}</div>
+        <div class="text-xs" [class.text-green-400]="!c.closed" [class.text-red-400]="c.closed">{{ c.closed ? 'Cerrado' : 'Abierto' }}</div>
+      </div>
+      <div *ngIf="!myChats.length" class="text-sm opacity-60">No tenés chats asignados</div>
+    </div>
+  </div>
+
+  <div class="flex-1 p-4 flex flex-col">
+    <div *ngIf="!selected" class="m-auto opacity-60">Seleccioná un chat</div>
+
+    <div *ngIf="selected" class="flex flex-col h-full">
+      <div class="flex items-center gap-2 border-b border-white/20 pb-2">
+        <div class="font-semibold">{{ selected.clientName || selected.clientEmail }}</div>
+        <span class="text-xs px-2 py-0.5 rounded border border-white/30" [class.text-green-400]="!selected.closed" [class.text-red-400]="selected.closed">{{ selected.closed ? 'Cerrado' : 'Abierto' }}</span>
+        <div class="ml-auto flex gap-2">
+          <button *ngIf="!selected.supportEmail" (click)="assignSelected()" class="px-3 py-1 rounded border border-white/40">Asignarme</button>
+          <button *ngIf="!selected.closed" (click)="closeSelected()" class="px-3 py-1 rounded border border-white/40">Cerrar</button>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto space-y-2 py-3">
+        <div *ngFor="let m of messages" class="p-2 border border-white/20 rounded">
+          <div class="text-xs opacity-70">{{ m.senderEmail || m.sender?.email }}</div>
+          <div>{{ m.content }}</div>
+          <div class="text-[10px] opacity-50">{{ m.date }}</div>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-white/20 flex gap-2">
+        <input [(ngModel)]="newMessage" (keyup.enter)="send()" class="flex-1 px-3 py-2 bg-black border border-white/30 rounded" placeholder="Escribe un mensaje..." />
+        <button (click)="send()" class="px-4 py-2 border border-white/40 rounded">Enviar</button>
+      </div>
+    </div>
+  </div>
+</div>
