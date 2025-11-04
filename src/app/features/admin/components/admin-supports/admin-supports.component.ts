@@ -23,6 +23,8 @@ export class AdminSupportsComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   successMessage = '';
+  private successTimeout: any;
+  private errorTimeout: any;
 
   createForm: FormGroup = this.fb.group({
     personal: this.fb.group({
@@ -39,21 +41,11 @@ export class AdminSupportsComponent implements OnInit {
     })
   });
 
-  // Edición
+  // Edición (usaremos createForm para crear/editar)
   editing: SupportDto | null = null;
-  editForm: FormGroup = this.fb.group({
-    firstName: ['', [Validators.required, Validators.minLength(2)]],
-    lastName: ['', [Validators.required, Validators.minLength(2)]],
-    // opcional; si se completa, debe cumplir políticas de seguridad
-    password: ['', [
-      Validators.minLength(8),
-      Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])/)
-    ]]
-  });
 
   // toggles de visibilidad de contraseña
   showCreatePassword = false;
-  showEditPassword = false;
 
   // Getters para mensajes dinámicos (crear)
   get createPasswordCtrl() { return this.createForm.get('credentials.password'); }
@@ -63,15 +55,6 @@ export class AdminSupportsComponent implements OnInit {
   get createNeedsUppercase(): boolean { return this.createPasswordPatternError && !/[A-Z]/.test(this.createPasswordValue); }
   get createNeedsNumber(): boolean { return this.createPasswordPatternError && !/\d/.test(this.createPasswordValue); }
   get createNeedsSpecial(): boolean { return this.createPasswordPatternError && !/[^A-Za-z0-9]/.test(this.createPasswordValue); }
-
-  // Getters para mensajes dinámicos (editar)
-  get editPasswordCtrl() { return this.editForm.get('password'); }
-  get editPasswordValue(): string { return (this.editPasswordCtrl?.value as string) || ''; }
-  get editPasswordPatternError(): boolean { return !!this.editPasswordCtrl?.errors?.['pattern']; }
-  get editNeedsLowercase(): boolean { return this.editPasswordPatternError && !/[a-z]/.test(this.editPasswordValue); }
-  get editNeedsUppercase(): boolean { return this.editPasswordPatternError && !/[A-Z]/.test(this.editPasswordValue); }
-  get editNeedsNumber(): boolean { return this.editPasswordPatternError && !/\d/.test(this.editPasswordValue); }
-  get editNeedsSpecial(): boolean { return this.editPasswordPatternError && !/[^A-Za-z0-9]/.test(this.editPasswordValue); }
 
   ngOnInit(): void {
     this.refresh();
@@ -85,76 +68,103 @@ export class AdminSupportsComponent implements OnInit {
     });
   }
 
-  onCreate() {
+  onSubmit() {
     if (this.createForm.invalid) {
       markAllAsTouched(this.createForm);
       return;
     }
-    this.isLoading = true;
     const { personal, credentials } = this.createForm.value as any;
-    const payload = {
-      firstName: personal.firstName,
-      lastName: personal.lastName,
-      email: credentials.email,
-      password: credentials.password,
-      role: 'SUPPORT' as const,
-    };
-    this.api.create(payload).subscribe({
-      next: () => {
-        this.isLoading = false;
-        this.successMessage = 'Soporte creado correctamente';
-        this.createForm.reset();
-        this.refresh();
-      },
-      error: (err) => {
-        this.isLoading = false;
-        if (err?.status === 409 && err?.error?.field === 'email') {
-          const emailCtrl = this.createForm.get('credentials.email');
-          emailCtrl?.setErrors({ ...(emailCtrl?.errors || {}), conflict: true });
-          emailCtrl?.markAsTouched();
-          this.errorMessage = '';
-        } else {
-          this.errorMessage = err?.error?.message || 'No se pudo crear el soporte';
+    if (!this.editing) {
+      // Crear
+      this.isLoading = true;
+      const payload = {
+        firstName: personal.firstName,
+        lastName: personal.lastName,
+        email: credentials.email,
+        password: credentials.password,
+        role: 'SUPPORT' as const,
+      };
+      this.api.create(payload).subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.showSuccess('Soporte creado correctamente');
+          this.createForm.reset();
+          this.refresh();
+        },
+        error: (err) => {
+          this.isLoading = false;
+          if (err?.status === 409 && err?.error?.field === 'email') {
+            const emailCtrl = this.createForm.get('credentials.email');
+            emailCtrl?.setErrors({ ...(emailCtrl?.errors || {}), conflict: true });
+            emailCtrl?.markAsTouched();
+            this.clearError();
+          } else {
+            this.showError(err?.error?.message || 'No se pudo crear el soporte');
+          }
         }
+      });
+    } else {
+      // Editar
+      this.isLoading = true;
+      const payload: any = {
+        firstName: personal.firstName,
+        lastName: personal.lastName,
+      };
+      if (credentials.password && String(credentials.password).trim().length > 0) {
+        payload.password = credentials.password;
       }
-    });
+      this.api.update(this.editing.id!, payload).subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.showSuccess('Soporte actualizado');
+          this.cancelEdit();
+          this.refresh();
+        },
+        error: (err) => {
+          this.isLoading = false;
+          this.showError(err?.error?.message || 'No se pudo actualizar');
+        }
+      });
+    }
   }
 
   beginEdit(s: SupportDto) {
+    if (String(s.role).toUpperCase().includes('ADMIN')) {
+      this.errorMessage = 'No se puede editar un usuario con rol ADMIN.';
+      return;
+    }
     this.editing = s;
-    this.editForm.reset({
-      firstName: s.firstName,
-      lastName: s.lastName,
-      password: ''
-    });
+    // Deshabilitar email y rellenar datos
+    const emailCtrl = this.createForm.get('credentials.email');
+    emailCtrl?.disable({ emitEvent: false });
+    this.createForm.patchValue({
+      personal: { firstName: s.firstName, lastName: s.lastName },
+      credentials: { email: s.email, password: '' }
+    }, { emitEvent: false });
+    // Hacer la contraseña opcional en modo edición
+    this.applyPasswordValidatorsForMode(false);
   }
 
   cancelEdit() {
     this.editing = null;
-    this.editForm.reset();
-  }
-
-  saveEdit() {
-    if (!this.editing) return;
-    if (this.editForm.invalid) { markAllAsTouched(this.editForm); return; }
-    const { firstName, lastName, password } = this.editForm.value as any;
-    const payload: any = { firstName, lastName };
-    if (password && String(password).trim().length > 0) {
-      payload.password = password;
-    }
-    this.isLoading = true;
-    this.api.update(this.editing.id!, payload).subscribe({
-      next: () => { this.isLoading = false; this.successMessage = 'Soporte actualizado'; this.editing = null; this.refresh(); },
-      error: (err) => { this.isLoading = false; this.errorMessage = err?.error?.message || 'No se pudo actualizar'; }
-    });
+    // Rehabilitar email y limpiar form
+    const emailCtrl = this.createForm.get('credentials.email');
+    emailCtrl?.enable({ emitEvent: false });
+    this.createForm.reset();
+    // Contraseña requerida en modo creación
+    this.applyPasswordValidatorsForMode(true);
   }
 
   remove(s: SupportDto) {
+    if (String(s.role).toUpperCase().includes('ADMIN')) {
+      this.errorMessage = 'No se puede eliminar un usuario con rol ADMIN.';
+      return;
+    }
     if (!confirm(`¿Eliminar soporte ${s.email}?`)) return;
     this.isLoading = true;
     this.api.remove(s.id!).subscribe({
-      next: () => { this.isLoading = false; this.successMessage = 'Soporte eliminado'; this.refresh(); },
-      error: (err) => { this.isLoading = false; this.errorMessage = err?.error?.message || 'No se pudo eliminar'; }
+      next: () => { this.isLoading = false; this.showSuccess('Soporte eliminado'); this.refresh(); },
+      error: (err) => { this.isLoading = false; this.showError(err?.error?.message || 'No se pudo eliminar'); }
     });
   }
 
@@ -162,5 +172,40 @@ export class AdminSupportsComponent implements OnInit {
     this.auth.logout().subscribe({
       next: () => this.router.navigate(['/auth/login'])
     });
+  }
+
+  private applyPasswordValidatorsForMode(isCreate: boolean) {
+    const ctrl = this.createForm.get('credentials.password');
+    if (!ctrl) return;
+    if (isCreate) {
+      ctrl.setValidators([
+        Validators.required,
+        Validators.minLength(8),
+        Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])/)
+      ]);
+    } else {
+      ctrl.setValidators([
+        Validators.minLength(8),
+        Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])/)
+      ]);
+    }
+    ctrl.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private showSuccess(msg: string) {
+    this.successMessage = msg;
+    if (this.successTimeout) clearTimeout(this.successTimeout);
+    this.successTimeout = setTimeout(() => { this.successMessage = ''; }, 5000);
+  }
+
+  private showError(msg: string) {
+    this.errorMessage = msg;
+    if (this.errorTimeout) clearTimeout(this.errorTimeout);
+    this.errorTimeout = setTimeout(() => { this.errorMessage = ''; }, 5000);
+  }
+
+  private clearError() {
+    if (this.errorTimeout) clearTimeout(this.errorTimeout);
+    this.errorMessage = '';
   }
 }

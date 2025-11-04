@@ -3,6 +3,8 @@ import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService } from '../../../chat/services/chat.service';
 import { SupportChatService, ChatSummary } from '../../services/support-chat.service';
+import { AuthService } from '../../../auth/services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-support-home',
@@ -14,6 +16,8 @@ import { SupportChatService, ChatSummary } from '../../services/support-chat.ser
 export class SupportHomeComponent implements OnInit, OnDestroy {
   private ws = inject(ChatService);
   private api = inject(SupportChatService);
+  private auth = inject(AuthService);
+  private router = inject(Router);
 
   tab: 'unassigned' | 'my' = 'unassigned';
   unassigned: ChatSummary[] = [];
@@ -65,5 +69,11 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
     if (!this.selected || !this.newMessage.trim()) return;
     this.ws.sendMessage(this.selected.id, this.newMessage.trim());
     this.newMessage = '';
+  }
+
+  logout() {
+    this.auth.logout().subscribe({
+      next: () => this.router.navigate(['/auth/login'])
+    });
   }
 }
