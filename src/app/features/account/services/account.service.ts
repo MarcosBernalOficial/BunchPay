@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { AccountSummary, ClientProfile, AliasChange, PasswordChange } from '../models/account.interface';
 import { Card } from '../models/card.interface';
 
@@ -9,64 +9,67 @@ import { Card } from '../models/card.interface';
 })
 export class AccountService {
     private readonly API_URL = 'http://localhost:8080';
+    private http = inject(HttpClient);
 
-    constructor(private http: HttpClient) {}
+    // Signals opcionales para UI reactiva
+    accountSummary = signal<AccountSummary | null>(null);
 
     /**
      * Obtener balance de la cuenta
      */
-    getBalance(): Observable<{ balance: number }> {
-        return this.http.get<{ balance: number }>(`${this.API_URL}/accountClient/balance`);
+    async getBalance(): Promise<{ balance: number }> {
+        return await firstValueFrom(this.http.get<{ balance: number }>(`${this.API_URL}/accountClient/balance`));
     }
 
     /**
      * Obtener alias de la cuenta
      */
-    getAlias(): Observable<string> {
-        return this.http.get<string>(`${this.API_URL}/accountClient/alias`);
+    async getAlias(): Promise<string> {
+        return await firstValueFrom(this.http.get<string>(`${this.API_URL}/accountClient/alias`));
     }
 
     /**
      * Cambiar alias de la cuenta
      */
-    changeAlias(aliasData: AliasChange): Observable<string> {
-        return this.http.patch<string>(`${this.API_URL}/accountClient/alias`, aliasData);
+    async changeAlias(aliasData: AliasChange): Promise<string> {
+        return await firstValueFrom(this.http.patch<string>(`${this.API_URL}/accountClient/alias`, aliasData));
     }
 
     /**
      * Obtener resumen de la cuenta
      */
-    getAccountSummary(): Observable<AccountSummary> {
-        return this.http.get<AccountSummary>(`${this.API_URL}/accountClient/summary`);
+    async loadAccountSummary(): Promise<void> {
+        const data = await firstValueFrom(this.http.get<AccountSummary>(`${this.API_URL}/accountClient/summary`));
+        this.accountSummary.set(data);
     }
 
     /**
      * Obtener perfil del cliente
      */
-    getClientProfile(): Observable<ClientProfile> {
-        return this.http.get<ClientProfile>(`${this.API_URL}/client/profile`);
+    async getClientProfile(): Promise<ClientProfile> {
+        return await firstValueFrom(this.http.get<ClientProfile>(`${this.API_URL}/client/profile`));
     }
 
     /**
      * Actualizar perfil del cliente
      */
-    updateProfile(profileData: Partial<ClientProfile>): Observable<ClientProfile> {
+    async updateProfile(profileData: Partial<ClientProfile>): Promise<ClientProfile> {
         // Backend mapea PUT /client/profile
-        return this.http.put<ClientProfile>(`${this.API_URL}/client/profile`, profileData);
+        return await firstValueFrom(this.http.put<ClientProfile>(`${this.API_URL}/client/profile`, profileData));
     }
 
     /**
      * Cambiar contraseña
      */
-    changePassword(passwordData: PasswordChange): Observable<any> {
+    async changePassword(passwordData: PasswordChange): Promise<void> {
         // Backend mapea PUT /client/change-password
-        return this.http.put(`${this.API_URL}/client/change-password`, passwordData);
+        await firstValueFrom(this.http.put(`${this.API_URL}/client/change-password`, passwordData));
     }
 
     /**
      * Obtener tarjeta del cliente
      */
-    getMyCard(): Observable<Card> {
-        return this.http.get<Card>(`${this.API_URL}/cards/my-card`);
+    async getMyCard(): Promise<Card> {
+        return await firstValueFrom(this.http.get<Card>(`${this.API_URL}/cards/my-card`));
     }
 }

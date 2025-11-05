@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { CryptoPrice } from '../models/crypto.interface';
 
 @Injectable({
@@ -8,13 +8,12 @@ import { CryptoPrice } from '../models/crypto.interface';
 })
 export class CryptoService {
     private readonly API_URL = 'http://localhost:8080/api/crypto';
-
-    constructor(private http: HttpClient) {}
+    private http = inject(HttpClient);
 
     /**
      * Obtener cotizaciones de criptomonedas
      */
-    getCryptoPrices(): Observable<CryptoPrice[]> {
-        return this.http.get<CryptoPrice[]>(`${this.API_URL}/prices`);
+    async getCryptoPrices(): Promise<CryptoPrice[]> {
+        return await firstValueFrom(this.http.get<CryptoPrice[]>(`${this.API_URL}/prices`));
     }
 }

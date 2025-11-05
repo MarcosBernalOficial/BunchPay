@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -7,10 +7,10 @@ import { markAllAsTouched } from '../../../../shared/utils/form-helpers';
 
 @Component({
   selector: 'app-login',
-  standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  styleUrls: ['./login.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoginComponent {
   private fb = inject(FormBuilder);
@@ -64,10 +64,10 @@ export class LoginComponent {
       const { credentials } = this.loginForm.value as any;
       const { email, password } = credentials;
 
-      this.authService.login({ email, password }).subscribe({
-        next: (response) => {
+      (async () => {
+        try {
+          await this.authService.login({ email, password });
           this.isLoading = false;
-          // Navegar según el rol (usando hasRole con normalización)
           if (this.authService.hasRole('ADMIN')) {
             this.router.navigate(['/admin/supports']);
           } else if (this.authService.hasRole('SUPPORT')) {
@@ -75,12 +75,11 @@ export class LoginComponent {
           } else {
             this.router.navigate(['/dashboard']);
           }
-        },
-        error: (error) => {
+        } catch (error: any) {
           this.isLoading = false;
-          this.errorMessage = error.error?.message || 'Error de autenticación. Verifica tus credenciales.';
+          this.errorMessage = error?.error?.message || 'Error de autenticación. Verifica tus credenciales.';
         }
-      });
+      })();
     } else {
       // Marcar todos los campos como touched para mostrar errores
       markAllAsTouched(this.loginForm);

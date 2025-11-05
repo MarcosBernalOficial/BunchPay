@@ -1,8 +1,7 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs/operators';
 
 import { AccountService } from '../../account/services/account.service';
 import { AuthService } from '../../auth/services/auth.service';
@@ -10,9 +9,9 @@ import { ClientProfile } from '../../account/models/account.interface';
 
 @Component({
   selector: 'app-settings',
-  standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
-  templateUrl: './settings.component.html'
+  templateUrl: './settings.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SettingsComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -51,19 +50,21 @@ export class SettingsComponent implements OnInit {
 
   private loadProfile(): void {
     this.loadingProfile = true;
-    this.accountService.getClientProfile()
-      .pipe(finalize(() => (this.loadingProfile = false)))
-      .subscribe({
-        next: (p: ClientProfile) => {
-          this.profileForm.patchValue({
-            firstName: p.firstName,
-            lastName: p.lastName,
-            dni: p.dni,
-            email: p.email,
-          });
-        },
-        error: () => this.setMessage('error', 'No se pudo cargar el perfil.')
-      });
+    (async () => {
+      try {
+        const p: ClientProfile = await this.accountService.getClientProfile();
+        this.profileForm.patchValue({
+          firstName: p.firstName,
+          lastName: p.lastName,
+          dni: p.dni,
+          email: p.email,
+        });
+      } catch {
+        this.setMessage('error', 'No se pudo cargar el perfil.');
+      } finally {
+        this.loadingProfile = false;
+      }
+    })();
   }
 
   saveProfile(): void {
@@ -73,13 +74,16 @@ export class SettingsComponent implements OnInit {
     }
     const { firstName, lastName, dni } = this.profileForm.getRawValue();
     this.savingProfile = true;
-    this.accountService
-      .updateProfile({ firstName: firstName!, lastName: lastName!, dni: dni! })
-      .pipe(finalize(() => (this.savingProfile = false)))
-      .subscribe({
-        next: () => this.setMessage('success', 'Perfil actualizado'),
-        error: () => this.setMessage('error', 'No se pudo actualizar el perfil')
-      });
+    (async () => {
+      try {
+        await this.accountService.updateProfile({ firstName: firstName!, lastName: lastName!, dni: dni! });
+        this.setMessage('success', 'Perfil actualizado');
+      } catch {
+        this.setMessage('error', 'No se pudo actualizar el perfil');
+      } finally {
+        this.savingProfile = false;
+      }
+    })();
   }
 
   changePassword(): void {
@@ -89,22 +93,25 @@ export class SettingsComponent implements OnInit {
     }
     const { currentPassword, newPassword } = this.passwordForm.getRawValue();
     this.changingPassword = true;
-    this.accountService
-      .changePassword({ currentPassword: currentPassword!, newPassword: newPassword! })
-      .pipe(finalize(() => (this.changingPassword = false)))
-      .subscribe({
-        next: () => {
-          this.setMessage('success', 'Contraseña actualizada');
-          this.passwordForm.reset();
-        },
-        error: () => this.setMessage('error', 'No se pudo cambiar la contraseña. Verificá la actual.')
-      });
+    (async () => {
+      try {
+        await this.accountService.changePassword({ currentPassword: currentPassword!, newPassword: newPassword! });
+        this.setMessage('success', 'Contraseña actualizada');
+        this.passwordForm.reset();
+      } catch {
+        this.setMessage('error', 'No se pudo cambiar la contraseña. Verificá la actual.');
+      } finally {
+        this.changingPassword = false;
+      }
+    })();
   }
 
   logout(): void {
-    this.authService.logout().subscribe({
-      complete: () => this.router.navigate(['/auth/login'])
-    });
+    (async () => {
+      try { await this.authService.logout(); } finally {
+        this.router.navigate(['/auth/login']);
+      }
+    })();
   }
 
   goSupport(): void {

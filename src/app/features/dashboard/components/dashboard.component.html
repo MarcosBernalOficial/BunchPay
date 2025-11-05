@@ -27,8 +27,11 @@
         <div class="flex items-center justify-center">
           <div class="text-center flex flex-col items-center justify-center">
             <p class="text-sm text-white/70">Saldo actual</p>
-            <h2 class="text-3xl font-bold" *ngIf="(accountSummary$ | async) as acc">${{ acc.balance | number:'1.2-2' }}</h2>
-            <h2 class="text-3xl font-bold" *ngIf="!(accountSummary$ | async)">--</h2>
+            @if (accountSummary()) {
+              <h2 class="text-3xl font-bold">${{ accountSummary()!.balance | number:'1.2-2' }}</h2>
+            } @else {
+              <h2 class="text-3xl font-bold">--</h2>
+            }
           </div>
         </div>
 
@@ -42,15 +45,14 @@
       <div class="border border-white/10 rounded-xl p-5 bg-white/5">
         <p class="text-sm text-white/70">Información de la cuenta</p>
         <div class="mt-3 space-y-2 text-sm">
-          <div *ngIf="(accountSummary$ | async) as acc; else noAcc">
+          @if (accountSummary()) {
             <div class="text-xs text-white/60">Alias</div>
-            <div class="font-mono break-all">{{ acc.alias }}</div>
+            <div class="font-mono break-all">{{ accountSummary()!.alias }}</div>
             <div class="mt-2 text-xs text-white/60">CVU</div>
-            <div class="font-mono text-xs break-all">{{ acc.cvu }}</div>
-          </div>
-          <ng-template #noAcc>
+            <div class="font-mono text-xs break-all">{{ accountSummary()!.cvu }}</div>
+          } @else {
             <div class="text-white/60 text-xs">Cargando datos de cuenta…</div>
-          </ng-template>
+          }
 
           <a routerLink="/account/card" class="inline-block mt-3 px-3 py-2 w-full text-center rounded bg-white text-black hover:bg-white/15 hover:text-white transition-colors duration-300">Tarjetas</a>
         </div>
@@ -64,8 +66,9 @@
         <a routerLink="/transactions/history" class="ml-auto text-sm text-white/70 hover:text-white">Ver todos</a>
       </div>
       <div class="border border-white/10 rounded-xl divide-y divide-white/10 overflow-hidden">
-        <div *ngIf="(recentTransactions$ | async) as txs; else noTx">
-          <div *ngFor="let tx of txs" class="flex items-center gap-3 px-4 py-3">
+        @if (recentTransactions().length) {
+          @for (tx of recentTransactions(); track tx.transactionId) {
+          <div class="flex items-center gap-3 px-4 py-3">
             <div class="w-2 h-2 rounded-full" [class.bg-green-400]="tx.amount > 0" [class.bg-red-400]="tx.amount < 0"></div>
             <div class="flex-1">
               <p class="font-medium">{{ tx.description || tx.type }}</p>
@@ -76,10 +79,10 @@
             </div>
             <a routerLink="/transactions/receipt/{{ tx.transactionId }}" class="text-xs text-white/70 hover:text-white">Comprobante</a>
           </div>
-        </div>
-        <ng-template #noTx>
+          }
+        } @else {
           <div class="px-4 py-6 text-white/70 text-sm">Todavía no tenés movimientos.</div>
-        </ng-template>
+        }
       </div>
     </section>
 

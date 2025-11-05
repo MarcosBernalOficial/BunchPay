@@ -1,18 +1,17 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService } from '../../../chat/services/chat.service';
 import { SupportChatService, ChatSummary } from '../../services/support-chat.service';
 import { AuthService } from '../../../auth/services/auth.service';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-support-home',
-  standalone: true,
-  imports: [CommonModule, FormsModule, NgIf, NgFor],
+  imports: [CommonModule, FormsModule],
   templateUrl: './support-home.component.html',
-  styleUrls: ['./support-home.component.css']
+  styleUrls: ['./support-home.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SupportHomeComponent implements OnInit, OnDestroy {
   private ws = inject(ChatService);
@@ -44,9 +43,13 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
     this.ws.disconnect();
   }
 
-  refreshLists() {
-    this.api.getUnassigned().subscribe(list => this.unassigned = list);
-    this.api.getMyChats().subscribe(list => this.myChats = list);
+  async refreshLists() {
+    try {
+      this.unassigned = await this.api.getUnassigned();
+    } catch { /* ignore */ }
+    try {
+      this.myChats = await this.api.getMyChats();
+    } catch { /* ignore */ }
   }
 
   // Determina si el mensaje es del soporte (yo) para alinear a la derecha
@@ -66,54 +69,54 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
     return false;
   }
 
-  pick(chat: ChatSummary) {
+  async pick(chat: ChatSummary) {
     this.selected = chat;
     this.messages = [];
-    this.api.getMessages(chat.id).subscribe(msgs => this.messages = msgs);
+    try {
+      this.messages = await this.api.getMessages(chat.id);
+    } catch { this.messages = []; }
     this.ws.subscribeToChat(chat.id).subscribe(msg => {
       this.messages = [...this.messages, msg];
     });
   }
 
-  assignSelected() {
+  async assignSelected() {
     if (!this.selected) return;
     const assignedId = this.selected.id;
-    this.api.assign(assignedId).subscribe(() => {
+    try {
+      await this.api.assign(assignedId);
       // Mover a la pestaña "Mis chats" y reseleccionar el chat asignado
       this.tab = 'my';
-      this.api.getMyChats().subscribe(list => {
-        this.myChats = list;
-        this.selected = list.find(c => c.id === assignedId) || null;
-      });
+      const list = await this.api.getMyChats();
+      this.myChats = list;
+      this.selected = list.find(c => c.id === assignedId) || null;
       // Actualizar también la lista de sin asignar
-      this.api.getUnassigned().subscribe(list => this.unassigned = list);
-    });
+      this.unassigned = await this.api.getUnassigned();
+    } catch { /* ignore */ }
   }
 
-  closeSelected() {
+  async closeSelected() {
     if (!this.selected) return;
     const id = this.selected.id;
     this.closing = true;
-    this.api.close(id).pipe(finalize(() => (this.closing = false))).subscribe({
-      next: () => {
-        // Marcar localmente y refrescar listas
+    try {
+      await this.api.close(id);
+      this.selected = { ...this.selected!, closed: true };
+      this.myChats = await this.api.getMyChats();
+      this.unassigned = await this.api.getUnassigned();
+    } catch (err: any) {
+      if (err?.status === 400) {
         this.selected = { ...this.selected!, closed: true };
-        this.api.getMyChats().subscribe(list => this.myChats = list);
-        this.api.getUnassigned().subscribe(list => this.unassigned = list);
-      },
-      error: (err) => {
-        if (err?.status === 400) {
-          // Ya estaba cerrado: reflejar estado y refrescar
-          this.selected = { ...this.selected!, closed: true };
-          this.api.getMyChats().subscribe(list => this.myChats = list);
-          this.api.getUnassigned().subscribe(list => this.unassigned = list);
-        } else if (err?.status === 403) {
-          alert('No estás asignado a este chat.');
-        } else {
-          alert('No se pudo cerrar el chat.');
-        }
+        this.myChats = await this.api.getMyChats();
+        this.unassigned = await this.api.getUnassigned();
+      } else if (err?.status === 403) {
+        alert('No estás asignado a este chat.');
+      } else {
+        alert('No se pudo cerrar el chat.');
       }
-    });
+    } finally {
+      this.closing = false;
+    }
   }
 
   send() {
@@ -123,8 +126,8 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
   }
 
   logout() {
-    this.auth.logout().subscribe({
-      next: () => this.router.navigate(['/auth/login'])
-    });
+    (async () => {
+      try { await this.auth.logout(); } finally { this.router.navigate(['/auth/login']); }
+    })();
   }
 }

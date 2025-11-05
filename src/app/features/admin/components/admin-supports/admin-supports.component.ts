@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { CommonModule, NgFor } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { AdminSupportService, SupportDto } from '../../services/admin-support.service';
@@ -8,10 +8,10 @@ import { markAllAsTouched } from '../../../../shared/utils/form-helpers';
 
 @Component({
   selector: 'app-admin-supports',
-  standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgFor],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './admin-supports.component.html',
-  styleUrls: ['./admin-supports.component.css']
+  styleUrls: ['./admin-supports.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminSupportsComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -60,12 +60,15 @@ export class AdminSupportsComponent implements OnInit {
     this.refresh();
   }
 
-  refresh() {
+  async refresh() {
     this.isLoading = true;
-    this.api.listAll().subscribe({
-      next: (data) => { this.supports = data; this.isLoading = false; },
-      error: (err) => { this.errorMessage = err?.error?.message || 'Error al cargar soportes'; this.isLoading = false; }
-    });
+    try {
+      this.supports = await this.api.listAll();
+    } catch (err: any) {
+      this.errorMessage = err?.error?.message || 'Error al cargar soportes';
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   onSubmit() {
@@ -84,15 +87,13 @@ export class AdminSupportsComponent implements OnInit {
         password: credentials.password,
         role: 'SUPPORT' as const,
       };
-      this.api.create(payload).subscribe({
-        next: () => {
-          this.isLoading = false;
+      (async () => {
+        try {
+          await this.api.create(payload);
           this.showSuccess('Soporte creado correctamente');
           this.createForm.reset();
-          this.refresh();
-        },
-        error: (err) => {
-          this.isLoading = false;
+          await this.refresh();
+        } catch (err: any) {
           if (err?.status === 409 && err?.error?.field === 'email') {
             const emailCtrl = this.createForm.get('credentials.email');
             emailCtrl?.setErrors({ ...(emailCtrl?.errors || {}), conflict: true });
@@ -101,8 +102,10 @@ export class AdminSupportsComponent implements OnInit {
           } else {
             this.showError(err?.error?.message || 'No se pudo crear el soporte');
           }
+        } finally {
+          this.isLoading = false;
         }
-      });
+      })();
     } else {
       // Editar
       this.isLoading = true;
@@ -113,18 +116,18 @@ export class AdminSupportsComponent implements OnInit {
       if (credentials.password && String(credentials.password).trim().length > 0) {
         payload.password = credentials.password;
       }
-      this.api.update(this.editing.id!, payload).subscribe({
-        next: () => {
-          this.isLoading = false;
+      (async () => {
+        try {
+          await this.api.update(this.editing!.id!, payload);
           this.showSuccess('Soporte actualizado');
           this.cancelEdit();
-          this.refresh();
-        },
-        error: (err) => {
-          this.isLoading = false;
+          await this.refresh();
+        } catch (err: any) {
           this.showError(err?.error?.message || 'No se pudo actualizar');
+        } finally {
+          this.isLoading = false;
         }
-      });
+      })();
     }
   }
 
@@ -162,16 +165,21 @@ export class AdminSupportsComponent implements OnInit {
     }
     if (!confirm(`¿Eliminar soporte ${s.email}?`)) return;
     this.isLoading = true;
-    this.api.remove(s.id!).subscribe({
-      next: () => { this.isLoading = false; this.showSuccess('Soporte eliminado'); this.refresh(); },
-      error: (err) => { this.isLoading = false; this.showError(err?.error?.message || 'No se pudo eliminar'); }
-    });
+    (async () => {
+      try {
+        await this.api.remove(s.id!);
+        this.showSuccess('Soporte eliminado');
+        await this.refresh();
+      } catch (err: any) {
+        this.showError(err?.error?.message || 'No se pudo eliminar');
+      } finally {
+        this.isLoading = false;
+      }
+    })();
   }
 
   logout() {
-    this.auth.logout().subscribe({
-      next: () => this.router.navigate(['/auth/login'])
-    });
+    (async () => { try { await this.auth.logout(); } finally { this.router.navigate(['/auth/login']); } })();
   }
 
   private applyPasswordValidatorsForMode(isCreate: boolean) {

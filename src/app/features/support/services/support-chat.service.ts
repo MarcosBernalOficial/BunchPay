@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 
 export interface ChatSummary {
   id: number;
@@ -25,26 +25,25 @@ export interface ChatMessage {
 export class SupportChatService {
   // Usamos el controlador dedicado a soporte
   private readonly API = 'http://localhost:8080/support/chats';
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
-
-  getUnassigned(): Observable<ChatSummary[]> {
-    return this.http.get<ChatSummary[]>(`${this.API}/unassigned`);
+  async getUnassigned(): Promise<ChatSummary[]> {
+    return await firstValueFrom(this.http.get<ChatSummary[]>(`${this.API}/unassigned`));
   }
 
-  getMyChats(): Observable<ChatSummary[]> {
-    return this.http.get<ChatSummary[]>(`${this.API}`);
+  async getMyChats(): Promise<ChatSummary[]> {
+    return await firstValueFrom(this.http.get<ChatSummary[]>(`${this.API}`));
   }
 
-  assign(chatId: number): Observable<any> {
-    return this.http.put(`${this.API}/${chatId}/assign`, {});
+  async assign(chatId: number): Promise<void> {
+    await firstValueFrom(this.http.put(`${this.API}/${chatId}/assign`, {}));
   }
 
-  close(chatId: number): Observable<any> {
-    return this.http.put(`${this.API}/${chatId}/close`, {});
+  async close(chatId: number): Promise<void> {
+    await firstValueFrom(this.http.put(`${this.API}/${chatId}/close`, {}));
   }
 
-  getMessages(chatId: number): Observable<ChatMessage[]> {
-    return this.http.get<ChatMessage[]>(`${this.API}/${chatId}/messages`);
+  async getMessages(chatId: number): Promise<ChatMessage[]> {
+    return await firstValueFrom(this.http.get<ChatMessage[]>(`${this.API}/${chatId}/messages`));
   }
 }

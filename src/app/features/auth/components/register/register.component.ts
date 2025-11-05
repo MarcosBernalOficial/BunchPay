@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CommonModule, NgIf } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -7,10 +7,10 @@ import { matchFieldsValidator, markAllAsTouched } from '../../../../shared/utils
 
 @Component({
     selector: 'app-register',
-    standalone: true,
     imports: [CommonModule, NgIf, ReactiveFormsModule, RouterLink],
     templateUrl: './register.component.html',
-    styleUrls: ['./register.component.css']
+    styleUrls: ['./register.component.css'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RegisterComponent {
     private fb = inject(FormBuilder);
@@ -99,33 +99,26 @@ export class RegisterComponent {
             email: credentials.email,
             password: credentials.password
         };
-        
-
-        this.authService.register(formData).subscribe({
-            next: (response) => {
-            this.isLoading = false;
-            this.successMessage = 'Cuenta creada exitosamente. Redirigiendo al login...';
-            
-            // Redirigir al login después de 2 segundos
-            setTimeout(() => {
-                this.router.navigate(['/auth/login']);
-            }, 2000);
-            },
-            error: (error) => {
-            this.isLoading = false;
-            // Si es conflicto por email, setear error en el control para mostrar debajo del input
-            if (error?.status === 409 && error?.error?.field === 'email') {
-                const emailCtrl = this.registerForm.get('credentials.email');
-                const mergedErrors = { ...(emailCtrl?.errors || {}), conflict: true } as any;
-                emailCtrl?.setErrors(mergedErrors);
-                emailCtrl?.markAsTouched();
-                this.errorMessage = '';
-                return;
+        (async () => {
+            try {
+                await this.authService.register(formData);
+                this.successMessage = 'Cuenta creada exitosamente. Redirigiendo al login...';
+                setTimeout(() => { this.router.navigate(['/auth/login']); }, 2000);
+            } catch (error: any) {
+                // Si es conflicto por email, setear error en el control para mostrar debajo del input
+                if (error?.status === 409 && error?.error?.field === 'email') {
+                    const emailCtrl = this.registerForm.get('credentials.email');
+                    const mergedErrors = { ...(emailCtrl?.errors || {}), conflict: true } as any;
+                    emailCtrl?.setErrors(mergedErrors);
+                    emailCtrl?.markAsTouched();
+                    this.errorMessage = '';
+                    return;
+                }
+                this.errorMessage = error?.error?.message || 'Error al crear la cuenta. Intenta nuevamente.';
+            } finally {
+                this.isLoading = false;
             }
-            
-            this.errorMessage = error?.error?.message || 'Error al crear la cuenta. Intenta nuevamente.';
-            }
-        });
+        })();
         } else {
         // Marcar todos los campos como touched para mostrar errores
         markAllAsTouched(this.registerForm);

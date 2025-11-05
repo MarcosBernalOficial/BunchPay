@@ -11,49 +11,70 @@
     </div>
 
     <!-- Listas -->
-    <div *ngIf="tab==='unassigned'" class="space-y-2">
-      <div *ngFor="let c of unassigned" (click)="pick(c)" class="p-3 rounded border border-white/20 hover:border-white/60 cursor-pointer">
-        <div class="text-sm opacity-80">{{ c.clientEmail }}</div>
-        <div class="font-medium">{{ c.clientName || 'Cliente' }}</div>
+    @if (tab==='unassigned') {
+      <div class="space-y-2">
+        @for (c of unassigned; track c.id) {
+          <div (click)="pick(c)" class="p-3 rounded border border-white/20 hover:border-white/60 cursor-pointer">
+            <div class="text-sm opacity-80">{{ c.clientEmail }}</div>
+            <div class="font-medium">{{ c.clientName || 'Cliente' }}</div>
+          </div>
+        }
+        @if (!unassigned.length) {
+          <div class="text-sm opacity-60">No hay chats sin asignar</div>
+        }
       </div>
-      <div *ngIf="!unassigned.length" class="text-sm opacity-60">No hay chats sin asignar</div>
-    </div>
+    }
 
-    <div *ngIf="tab==='my'" class="space-y-2">
-      <div *ngFor="let c of myChats" (click)="pick(c)" class="p-3 rounded border border-white/20 hover:border-white/60 cursor-pointer">
-        <div class="text-sm opacity-80">{{ c.clientEmail }}</div>
-        <div class="font-medium">{{ c.clientName || 'Cliente' }}</div>
-        <div class="text-xs" [class.text-green-400]="!c.closed" [class.text-red-400]="c.closed">{{ c.closed ? 'Cerrado' : 'Abierto' }}</div>
+    @if (tab==='my') {
+      <div class="space-y-2">
+        @for (c of myChats; track c.id) {
+          <div (click)="pick(c)" class="p-3 rounded border border-white/20 hover:border-white/60 cursor-pointer">
+            <div class="text-sm opacity-80">{{ c.clientEmail }}</div>
+            <div class="font-medium">{{ c.clientName || 'Cliente' }}</div>
+            <div class="text-xs" [class.text-green-400]="!c.closed" [class.text-red-400]="c.closed">{{ c.closed ? 'Cerrado' : 'Abierto' }}</div>
+          </div>
+        }
+        @if (!myChats.length) {
+          <div class="text-sm opacity-60">No tenés chats asignados</div>
+        }
       </div>
-      <div *ngIf="!myChats.length" class="text-sm opacity-60">No tenés chats asignados</div>
-    </div>
+    }
   </div>
 
   <div class="flex-1 p-4 flex flex-col">
-    <div *ngIf="!selected" class="m-auto opacity-60">Seleccioná un chat</div>
+    @if (!selected) {
+      <div class="m-auto opacity-60">Seleccioná un chat</div>
+    }
 
-    <div *ngIf="selected" class="flex flex-col h-full">
+    @if (selected) {
+      <div class="flex flex-col h-full">
       <div class="flex items-center gap-2 border-b border-white/20 pb-2">
         <div class="font-semibold">{{ selected.clientName || selected.clientEmail }}</div>
         <span class="text-xs px-2 py-0.5 rounded border border-white/30" [class.text-green-400]="!selected.closed" [class.text-red-400]="selected.closed">{{ selected.closed ? 'Cerrado' : 'Abierto' }}</span>
         <div class="ml-auto flex gap-2">
-          <button *ngIf="selected.supportName === 'No asignado'" (click)="assignSelected()" class="px-3 py-1 rounded border border-white/40">Asignarme</button>
-          <button *ngIf="selected.supportName !== 'No asignado' && !selected.closed" (click)="closeSelected()" [disabled]="closing" class="px-3 py-1 rounded border border-white/40 disabled:opacity-50">Cerrar</button>
+          @if (selected.supportName === 'No asignado') {
+            <button (click)="assignSelected()" class="px-3 py-1 rounded border border-white/40">Asignarme</button>
+          }
+          @if (selected.supportName !== 'No asignado' && !selected.closed) {
+            <button (click)="closeSelected()" [disabled]="closing" class="px-3 py-1 rounded border border-white/40 disabled:opacity-50">Cerrar</button>
+          }
         </div>
       </div>
 
       <div class="flex-1 overflow-y-auto space-y-2 py-3">
-        <div *ngFor="let m of messages" class="flex" [class.justify-end]="isMine(m)" [class.justify-start]="!isMine(m)">
-          <div class="max-w-[75%] p-2 rounded border"
-                [class.border-white/10]="!isMine(m)" [class.bg-white/10]="!isMine(m)"
-                [class.border-white/80]="isMine(m)" [class.bg-white]="isMine(m)" [class.text-black]="isMine(m)">
-            <div class="text-[11px] opacity-60" [class.text-right]="isMine(m)">
-              {{ m.senderEmail || m.senderName || m.sender?.email }}
+        @for (m of messages; track m) {
+          <div class="flex" [class.justify-end]="isMine(m)" [class.justify-start]="!isMine(m)">
+            <div class="max-w-[75%] p-2 rounded border"
+                  [class.border-white/10]="!isMine(m)" [class.bg-white/10]="!isMine(m)"
+                  [class.border-white/80]="isMine(m)" [class.bg-white]="isMine(m)" [class.text-black]="isMine(m)">
+              <div class="text-[11px] opacity-60" [class.text-right]="isMine(m)">
+                {{ m.senderEmail || m.senderName || m.sender?.email }}
+              </div>
+              <div class="whitespace-pre-wrap">{{ m.content }}</div>
+              <div class="text-[10px] opacity-50" [class.text-right]="isMine(m)">{{ m.date | date:'short' }}</div>
             </div>
-            <div class="whitespace-pre-wrap">{{ m.content }}</div>
-            <div class="text-[10px] opacity-50" [class.text-right]="isMine(m)">{{ m.date | date:'short' }}</div>
           </div>
-        </div>
+        }
       </div>
 
       <div class="pt-2 border-t border-white/20 flex gap-2">
@@ -61,5 +82,6 @@
         <button (click)="send()" class="px-4 py-2 border border-white/40 rounded">Enviar</button>
       </div>
     </div>
+    }
   </div>
 </div>

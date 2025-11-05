@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { firstValueFrom, tap } from 'rxjs';
 import { LoginUser } from '../models/login-user.interface';
 import { RegisterUser } from '../models/register-user.interface';
 import { LoginResponse } from '../models/auth-response.interface';
@@ -10,22 +10,24 @@ import { LoginResponse } from '../models/auth-response.interface';
 })
 export class AuthService {
     private readonly API_URL = 'http://localhost:8080/auth';
-    private currentUserSubject = new BehaviorSubject<LoginResponse | null>(null);
-    public currentUser$ = this.currentUserSubject.asObservable();
+    // Estado con señales
+    private _currentUser = signal<LoginResponse | null>(null);
+    currentUser = this._currentUser; // expuesto como lectura en componentes si se necesita
+    private http = inject(HttpClient);
 
-    constructor(private http: HttpClient) {
+    constructor() {
         // Preferir sessionStorage (sesión por pestaña) para permitir múltiples sesiones en distintas pestañas
         // Migración suave: si no hay en sessionStorage pero sí en localStorage, copiarlo
         const ssUser = sessionStorage.getItem('currentUser');
         if (ssUser) {
-            this.currentUserSubject.next(JSON.parse(ssUser));
+            this._currentUser.set(JSON.parse(ssUser));
         } else {
             const lsUser = localStorage.getItem('currentUser');
             if (lsUser) {
                 sessionStorage.setItem('currentUser', lsUser);
                 const token = localStorage.getItem('token');
                 if (token) sessionStorage.setItem('token', token);
-                this.currentUserSubject.next(JSON.parse(lsUser));
+                this._currentUser.set(JSON.parse(lsUser));
             }
         }
     }
@@ -33,42 +35,38 @@ export class AuthService {
     /**
      * Registrar nuevo usuario
      */
-    register(userData: RegisterUser): Observable<any> {
-        return this.http.post(`${this.API_URL}/register`, userData);
+    async register(userData: RegisterUser): Promise<void> {
+        await firstValueFrom(this.http.post(`${this.API_URL}/register`, userData));
     }
 
     /**
      * Iniciar sesión
      */
-    login(credentials: LoginUser): Observable<LoginResponse> {
-        return this.http.post<LoginResponse>(`${this.API_URL}/login`, credentials).pipe(
-        tap(response => {
-            // Guardar en sessionStorage (aislado por pestaña)
-            sessionStorage.setItem('currentUser', JSON.stringify(response));
-            sessionStorage.setItem('token', response.token);
-            
-            // Actualizar subject
-            this.currentUserSubject.next(response);
-        })
+    async login(credentials: LoginUser): Promise<LoginResponse> {
+        const response = await firstValueFrom(
+            this.http.post<LoginResponse>(`${this.API_URL}/login`, credentials).pipe(
+                tap(res => {
+                    sessionStorage.setItem('currentUser', JSON.stringify(res));
+                    sessionStorage.setItem('token', res.token);
+                    this._currentUser.set(res);
+                })
+            )
         );
+        return response;
     }
 
     /**
      * Cerrar sesión
      */
-    logout(): Observable<any> {
-        return this.http.post(`${this.API_URL}/logout`, {}).pipe(
-        tap(() => {
-            // Limpiar sessionStorage y localStorage (por si quedó residuo)
-            sessionStorage.removeItem('currentUser');
-            sessionStorage.removeItem('token');
-            localStorage.removeItem('currentUser');
-            localStorage.removeItem('token');
-            
-            // Limpiar subject
-            this.currentUserSubject.next(null);
-        })
-        );
+    async logout(): Promise<void> {
+        await firstValueFrom(this.http.post(`${this.API_URL}/logout`, {}));
+        // Limpiar sessionStorage y localStorage (por si quedó residuo)
+        sessionStorage.removeItem('currentUser');
+        sessionStorage.removeItem('token');
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('token');
+        // Limpiar señal
+        this._currentUser.set(null);
     }
 
     /**
@@ -89,7 +87,7 @@ export class AuthService {
      * Obtener usuario actual
      */
     getCurrentUser(): LoginResponse | null {
-        return this.currentUserSubject.value;
+        return this._currentUser();
     }
 
     /**

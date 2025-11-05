@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -8,9 +8,9 @@ import { ChatService } from '../../../../features/chat/services/chat.service';
 
 @Component({
   selector: 'app-support-chat',
-  standalone: true,
   imports: [CommonModule, RouterModule, ReactiveFormsModule],
-  templateUrl: './support-chat.component.html'
+  templateUrl: './support-chat.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SupportChatComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
@@ -31,16 +31,16 @@ export class SupportChatComponent implements OnInit, OnDestroy {
     this.loading = true;
     try {
       await this.ws.connect();
-      const chats = (await this.clientChat.listMyChats().toPromise()) || [];
+      const chats = await this.clientChat.listMyChats();
       let active: ClientChatSummary | null = chats.find(c => !c.closed) || null;
       if (!active) {
-        active = (await this.clientChat.startChat().toPromise()) || null;
+        active = await this.clientChat.startChat();
       }
       this.chat = active;
 
       if (!this.chat) return;
-      const history = await this.clientChat.getMessages(this.chat.id).toPromise();
-      this.messages = history || [];
+      const history = await this.clientChat.getMessages(this.chat.id);
+      this.messages = history;
 
       this.ws.subscribeToChat(this.chat.id).subscribe(event => {
         // event puede ser un mensaje o un objeto con contenido

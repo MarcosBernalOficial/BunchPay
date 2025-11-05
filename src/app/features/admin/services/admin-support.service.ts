@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 
 export interface SupportDto {
   id?: number;
@@ -21,22 +21,21 @@ export interface CreateSupportPayload {
 @Injectable({ providedIn: 'root' })
 export class AdminSupportService {
   private readonly API = 'http://localhost:8080/support';
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
-
-  listAll(): Observable<SupportDto[]> {
-    return this.http.get<SupportDto[]>(`${this.API}/all`);
+  async listAll(): Promise<SupportDto[]> {
+    return await firstValueFrom(this.http.get<SupportDto[]>(`${this.API}/all`));
   }
 
-  create(payload: CreateSupportPayload): Observable<SupportDto> {
-    return this.http.post<SupportDto>(`${this.API}/create`, payload);
+  async create(payload: CreateSupportPayload): Promise<SupportDto> {
+    return await firstValueFrom(this.http.post<SupportDto>(`${this.API}/create`, payload));
   }
 
-  update(id: number, dto: { firstName: string; lastName: string; password?: string }): Observable<SupportDto> {
-    return this.http.put<SupportDto>(`${this.API}/${id}`, dto);
+  async update(id: number, dto: { firstName: string; lastName: string; password?: string }): Promise<SupportDto> {
+    return await firstValueFrom(this.http.put<SupportDto>(`${this.API}/${id}`, dto));
   }
 
-  remove(id: number): Observable<any> {
-    return this.http.delete(`${this.API}/${id}`);
+  async remove(id: number): Promise<void> {
+    await firstValueFrom(this.http.delete(`${this.API}/${id}`));
   }
 }

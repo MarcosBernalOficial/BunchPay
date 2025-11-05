@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { TransferRequest } from '../models/transfer-request.interface';
 import { Transaction } from '../models/transaction.interface';
 
@@ -9,27 +9,29 @@ import { Transaction } from '../models/transaction.interface';
 })
 export class TransactionService {
     private readonly API_URL = 'http://localhost:8080/transactions';
+    private http = inject(HttpClient);
 
-    constructor(private http: HttpClient) {}
+    transactions = signal<Transaction[]>([]);
 
     /**
      * Realizar transferencia
      */
-    makeTransfer(transferData: TransferRequest): Observable<string> {
-        return this.http.post<string>(`${this.API_URL}/transfer`, transferData);
+    async makeTransfer(transferData: TransferRequest): Promise<string> {
+        return await firstValueFrom(this.http.post<string>(`${this.API_URL}/transfer`, transferData));
     }
 
     /**
      * Obtener historial de transacciones
      */
-    getTransactionHistory(): Observable<Transaction[]> {
-        return this.http.get<Transaction[]>(`${this.API_URL}/viewAll`);
+    async loadTransactionHistory(): Promise<void> {
+        const data = await firstValueFrom(this.http.get<Transaction[]>(`${this.API_URL}/viewAll`));
+        this.transactions.set(data);
     }
 
     /**
      * Filtrar transacciones (si el backend lo soporta)
      */
-    filterTransactions(filters: any): Observable<Transaction[]> {
-        return this.http.post<Transaction[]>(`${this.API_URL}/filter`, filters);
+    async filterTransactions(filters: any): Promise<Transaction[]> {
+        return await firstValueFrom(this.http.post<Transaction[]>(`${this.API_URL}/filter`, filters));
     }
 }

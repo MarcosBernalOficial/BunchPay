@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { RechargeRequest } from '../models/recharge.interface';
 
 @Injectable({
@@ -8,13 +8,12 @@ import { RechargeRequest } from '../models/recharge.interface';
 })
 export class ServicesService {
     private readonly API_URL = 'http://localhost:8080/api/recharge';
-
-    constructor(private http: HttpClient) {}
+    private http = inject(HttpClient);
 
     /**
    * Realizar recarga de servicio
    */
-    processRecharge(rechargeData: RechargeRequest): Observable<string> {
-        return this.http.post<string>(`${this.API_URL}/service`, rechargeData);
+    async processRecharge(rechargeData: RechargeRequest): Promise<string> {
+        return await firstValueFrom(this.http.post<string>(`${this.API_URL}/service`, rechargeData));
     }
 }

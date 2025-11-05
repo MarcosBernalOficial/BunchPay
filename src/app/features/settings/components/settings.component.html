@@ -21,10 +21,12 @@
     <!-- Main -->
     <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
 
-        <!-- Mensaje global -->
-        <div *ngIf="message as msg" class="p-3 rounded border" [class.border-green-400]="msg.type==='success'" [class.border-red-400]="msg.type==='error'">
-        {{ msg.text }}
-        </div>
+                        <!-- Mensaje global -->
+                        @if (message) {
+                            <div class="p-3 rounded border" [class.border-green-400]="message.type==='success'" [class.border-red-400]="message.type==='error'">
+                                {{ message.text }}
+                            </div>
+                        }
 
         <!-- Perfil -->
         <section class="border border-white/10 rounded-xl p-5 bg-white/5">
