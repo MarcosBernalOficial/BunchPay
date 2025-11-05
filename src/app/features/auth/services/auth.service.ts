@@ -14,10 +14,19 @@ export class AuthService {
     public currentUser$ = this.currentUserSubject.asObservable();
 
     constructor(private http: HttpClient) {
-        // Cargar usuario desde localStorage al inicializar
-        const storedUser = localStorage.getItem('currentUser');
-        if (storedUser) {
-            this.currentUserSubject.next(JSON.parse(storedUser));
+        // Preferir sessionStorage (sesión por pestaña) para permitir múltiples sesiones en distintas pestañas
+        // Migración suave: si no hay en sessionStorage pero sí en localStorage, copiarlo
+        const ssUser = sessionStorage.getItem('currentUser');
+        if (ssUser) {
+            this.currentUserSubject.next(JSON.parse(ssUser));
+        } else {
+            const lsUser = localStorage.getItem('currentUser');
+            if (lsUser) {
+                sessionStorage.setItem('currentUser', lsUser);
+                const token = localStorage.getItem('token');
+                if (token) sessionStorage.setItem('token', token);
+                this.currentUserSubject.next(JSON.parse(lsUser));
+            }
         }
     }
 
@@ -34,9 +43,9 @@ export class AuthService {
     login(credentials: LoginUser): Observable<LoginResponse> {
         return this.http.post<LoginResponse>(`${this.API_URL}/login`, credentials).pipe(
         tap(response => {
-            // Guardar en localStorage
-            localStorage.setItem('currentUser', JSON.stringify(response));
-            localStorage.setItem('token', response.token);
+            // Guardar en sessionStorage (aislado por pestaña)
+            sessionStorage.setItem('currentUser', JSON.stringify(response));
+            sessionStorage.setItem('token', response.token);
             
             // Actualizar subject
             this.currentUserSubject.next(response);
@@ -50,7 +59,9 @@ export class AuthService {
     logout(): Observable<any> {
         return this.http.post(`${this.API_URL}/logout`, {}).pipe(
         tap(() => {
-            // Limpiar localStorage
+            // Limpiar sessionStorage y localStorage (por si quedó residuo)
+            sessionStorage.removeItem('currentUser');
+            sessionStorage.removeItem('token');
             localStorage.removeItem('currentUser');
             localStorage.removeItem('token');
             
@@ -71,7 +82,7 @@ export class AuthService {
      * Obtener token
      */
     getToken(): string | null {
-        return localStorage.getItem('token');
+        return sessionStorage.getItem('token') || null;
     }
 
     /**

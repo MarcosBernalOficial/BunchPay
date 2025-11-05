@@ -37,16 +37,22 @@
         <div class="font-semibold">{{ selected.clientName || selected.clientEmail }}</div>
         <span class="text-xs px-2 py-0.5 rounded border border-white/30" [class.text-green-400]="!selected.closed" [class.text-red-400]="selected.closed">{{ selected.closed ? 'Cerrado' : 'Abierto' }}</span>
         <div class="ml-auto flex gap-2">
-          <button *ngIf="!selected.supportEmail" (click)="assignSelected()" class="px-3 py-1 rounded border border-white/40">Asignarme</button>
-          <button *ngIf="!selected.closed" (click)="closeSelected()" class="px-3 py-1 rounded border border-white/40">Cerrar</button>
+          <button *ngIf="selected.supportName === 'No asignado'" (click)="assignSelected()" class="px-3 py-1 rounded border border-white/40">Asignarme</button>
+          <button *ngIf="selected.supportName !== 'No asignado' && !selected.closed" (click)="closeSelected()" [disabled]="closing" class="px-3 py-1 rounded border border-white/40 disabled:opacity-50">Cerrar</button>
         </div>
       </div>
 
       <div class="flex-1 overflow-y-auto space-y-2 py-3">
-        <div *ngFor="let m of messages" class="p-2 border border-white/20 rounded">
-          <div class="text-xs opacity-70">{{ m.senderEmail || m.sender?.email }}</div>
-          <div>{{ m.content }}</div>
-          <div class="text-[10px] opacity-50">{{ m.date }}</div>
+        <div *ngFor="let m of messages" class="flex" [class.justify-end]="isMine(m)" [class.justify-start]="!isMine(m)">
+          <div class="max-w-[75%] p-2 rounded border"
+                [class.border-white/10]="!isMine(m)" [class.bg-white/10]="!isMine(m)"
+                [class.border-white/80]="isMine(m)" [class.bg-white]="isMine(m)" [class.text-black]="isMine(m)">
+            <div class="text-[11px] opacity-60" [class.text-right]="isMine(m)">
+              {{ m.senderEmail || m.senderName || m.sender?.email }}
+            </div>
+            <div class="whitespace-pre-wrap">{{ m.content }}</div>
+            <div class="text-[10px] opacity-50" [class.text-right]="isMine(m)">{{ m.date | date:'short' }}</div>
+          </div>
         </div>
       </div>
 

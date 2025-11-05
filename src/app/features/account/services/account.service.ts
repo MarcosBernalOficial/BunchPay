@@ -51,14 +51,16 @@ export class AccountService {
      * Actualizar perfil del cliente
      */
     updateProfile(profileData: Partial<ClientProfile>): Observable<ClientProfile> {
-        return this.http.put<ClientProfile>(`${this.API_URL}/client/update`, profileData);
+        // Backend mapea PUT /client/profile
+        return this.http.put<ClientProfile>(`${this.API_URL}/client/profile`, profileData);
     }
 
     /**
      * Cambiar contraseña
      */
     changePassword(passwordData: PasswordChange): Observable<any> {
-        return this.http.put(`${this.API_URL}/client/password`, passwordData);
+        // Backend mapea PUT /client/change-password
+        return this.http.put(`${this.API_URL}/client/change-password`, passwordData);
     }
 
     /**

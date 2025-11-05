@@ -21,6 +21,8 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
       catchError((error: HttpErrorResponse) => {
         // Si el token expiró o no es válido, limpiar sesión para forzar re-login
         if (error.status === 401 || error.status === 403) {
+          sessionStorage.removeItem('currentUser');
+          sessionStorage.removeItem('token');
           localStorage.removeItem('currentUser');
           localStorage.removeItem('token');
         }

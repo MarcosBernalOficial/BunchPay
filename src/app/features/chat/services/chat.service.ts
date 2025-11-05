@@ -11,7 +11,7 @@ export class ChatService {
   private subjects: Map<string, Subject<any>> = new Map();
 
   private get token(): string | null {
-    return localStorage.getItem('token');
+    return sessionStorage.getItem('token');
   }
 
   connect(): Promise<void> {
@@ -46,6 +46,31 @@ export class ChatService {
   subscribeToChat(chatId: number): Observable<any> {
     const topic = `/topic/chats/${chatId}`;
 
+    if (!this.subjects.has(topic)) {
+      this.subjects.set(topic, new Subject<any>());
+    }
+    const subject = this.subjects.get(topic)!;
+
+    if (!this.subscriptions.has(topic)) {
+      if (!this.client?.connected) {
+        throw new Error('WebSocket not connected');
+      }
+      const sub = this.client.subscribe(topic, (message: IMessage) => {
+        try {
+          const body = JSON.parse(message.body);
+          subject.next(body);
+        } catch {
+          subject.next(message.body);
+        }
+      });
+      this.subscriptions.set(topic, sub);
+    }
+
+    return subject.asObservable();
+  }
+
+  /** Subscribe to an arbitrary STOMP topic */
+  subscribeToTopic(topic: string): Observable<any> {
     if (!this.subjects.has(topic)) {
       this.subjects.set(topic, new Subject<any>());
     }

@@ -5,6 +5,7 @@ import { ChatService } from '../../../chat/services/chat.service';
 import { SupportChatService, ChatSummary } from '../../services/support-chat.service';
 import { AuthService } from '../../../auth/services/auth.service';
 import { Router } from '@angular/router';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-support-home',
@@ -26,10 +27,17 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
   messages: any[] = [];
   newMessage = '';
   loading = false;
+  closing = false;
 
   async ngOnInit() {
     await this.ws.connect().catch(() => {});
     this.refreshLists();
+    // Suscribirse a eventos de cambios en la lista de sin asignar (nuevo mensaje, creado, asignado, cerrado)
+    try {
+      this.ws.subscribeToTopic('/topic/support/unassigned').subscribe(() => this.refreshLists());
+    } catch {
+      // si falla la suscripción, la UI seguirá funcionando con refresh manual por acciones
+    }
   }
 
   ngOnDestroy(): void {
@@ -39,6 +47,23 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
   refreshLists() {
     this.api.getUnassigned().subscribe(list => this.unassigned = list);
     this.api.getMyChats().subscribe(list => this.myChats = list);
+  }
+
+  // Determina si el mensaje es del soporte (yo) para alinear a la derecha
+  isMine(m: any): boolean {
+    // REST (SupportChatController): senderType = 'SUPPORT' | 'CLIENT'
+    if (m && typeof m.senderType === 'string') {
+      return m.senderType === 'SUPPORT';
+    }
+    // WS (ChatWsController): senderRole = 'SUPPORT' | 'CLIENT'
+    if (m && typeof m.senderRole === 'string') {
+      return m.senderRole === 'SUPPORT';
+    }
+    // Fallback por estructura antigua
+    if (m?.sender?.role) {
+      return m.sender.role === 'SUPPORT';
+    }
+    return false;
   }
 
   pick(chat: ChatSummary) {
@@ -52,16 +77,42 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
 
   assignSelected() {
     if (!this.selected) return;
-    this.api.assign(this.selected.id).subscribe(updated => {
-      this.selected = updated;
-      this.refreshLists();
+    const assignedId = this.selected.id;
+    this.api.assign(assignedId).subscribe(() => {
+      // Mover a la pestaña "Mis chats" y reseleccionar el chat asignado
+      this.tab = 'my';
+      this.api.getMyChats().subscribe(list => {
+        this.myChats = list;
+        this.selected = list.find(c => c.id === assignedId) || null;
+      });
+      // Actualizar también la lista de sin asignar
+      this.api.getUnassigned().subscribe(list => this.unassigned = list);
     });
   }
 
   closeSelected() {
     if (!this.selected) return;
-    this.api.close(this.selected.id).subscribe(() => {
-      this.refreshLists();
+    const id = this.selected.id;
+    this.closing = true;
+    this.api.close(id).pipe(finalize(() => (this.closing = false))).subscribe({
+      next: () => {
+        // Marcar localmente y refrescar listas
+        this.selected = { ...this.selected!, closed: true };
+        this.api.getMyChats().subscribe(list => this.myChats = list);
+        this.api.getUnassigned().subscribe(list => this.unassigned = list);
+      },
+      error: (err) => {
+        if (err?.status === 400) {
+          // Ya estaba cerrado: reflejar estado y refrescar
+          this.selected = { ...this.selected!, closed: true };
+          this.api.getMyChats().subscribe(list => this.myChats = list);
+          this.api.getUnassigned().subscribe(list => this.unassigned = list);
+        } else if (err?.status === 403) {
+          alert('No estás asignado a este chat.');
+        } else {
+          alert('No se pudo cerrar el chat.');
+        }
+      }
     });
   }
 

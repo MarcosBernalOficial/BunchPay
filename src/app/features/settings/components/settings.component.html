@@ -1,0 +1,81 @@
+<div class="min-h-screen bg-black text-white">
+    <!-- Header -->
+    <header class="border-b border-white/10">
+        <div class="max-w-6xl mx-auto px-4 py-5">
+        <h1 class="text-2xl font-bold tracking-wide">BunchPay</h1>
+        </div>
+        <!-- Navbar -->
+        <nav class="bg-white/10">
+        <div class="max-w-6xl mx-auto px-2">
+            <ul class="flex gap-2 text-md">
+            <li><a routerLink="/transactions" class="block px-4 py-3 hover:bg-white/10 rounded transition-colors duration-300">Transacciones</a></li>
+            <li><a routerLink="/benefits" class="block px-4 py-3 hover:bg-white/10 rounded transition-colors duration-300">Beneficios</a></li>
+            <li><a routerLink="/dashboard" class="block px-4 py-3 hover:bg-white/10 rounded transition-colors duration-300">Home</a></li>
+            <li><a routerLink="/crypto" class="block px-4 py-3 hover:bg-white/10 rounded transition-colors duration-300">Crypto</a></li>
+            <li class="ml-auto"><a routerLink="/settings" class="block px-4 py-3 bg-white/15 rounded font-medium transition-colors duration-300">Configuración</a></li>
+            </ul>
+        </div>
+        </nav>
+    </header>
+
+    <!-- Main -->
+    <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+
+        <!-- Mensaje global -->
+        <div *ngIf="message as msg" class="p-3 rounded border" [class.border-green-400]="msg.type==='success'" [class.border-red-400]="msg.type==='error'">
+        {{ msg.text }}
+        </div>
+
+        <!-- Perfil -->
+        <section class="border border-white/10 rounded-xl p-5 bg-white/5">
+        <h2 class="text-xl font-semibold mb-4">Perfil</h2>
+        <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+            <label class="block text-sm text-white/70 mb-1">Nombre</label>
+            <input type="text" formControlName="firstName" class="w-full bg-transparent border border-white/20 rounded px-3 py-2 outline-none" />
+            </div>
+            <div>
+            <label class="block text-sm text-white/70 mb-1">Apellido</label>
+            <input type="text" formControlName="lastName" class="w-full bg-transparent border border-white/20 rounded px-3 py-2 outline-none" />
+            </div>
+            <div>
+            <label class="block text-sm text-white/70 mb-1">DNI</label>
+            <input type="text" formControlName="dni" class="w-full bg-transparent border border-white/20 rounded px-3 py-2 outline-none" />
+            </div>
+            <div>
+            <label class="block text-sm text-white/70 mb-1">Email</label>
+            <input type="email" formControlName="email" class="w-full bg-transparent border border-white/20 rounded px-3 py-2 outline-none" readonly />
+            </div>
+            <div class="md:col-span-2 mt-2">
+            <button type="submit" [disabled]="savingProfile || profileForm.invalid" class="px-4 py-2 rounded bg-white text-black hover:bg-white/90 disabled:opacity-60">Guardar perfil</button>
+            </div>
+        </form>
+        </section>
+
+        <!-- Contraseña -->
+        <section class="border border-white/10 rounded-xl p-5 bg-white/5">
+        <h2 class="text-xl font-semibold mb-4">Cambiar contraseña</h2>
+        <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+            <label class="block text-sm text-white/70 mb-1">Contraseña actual</label>
+            <input type="password" formControlName="currentPassword" class="w-full bg-transparent border border-white/20 rounded px-3 py-2 outline-none" />
+            </div>
+            <div>
+            <label class="block text-sm text-white/70 mb-1">Contraseña nueva</label>
+            <input type="password" formControlName="newPassword" class="w-full bg-transparent border border-white/20 rounded px-3 py-2 outline-none" />
+            <p class="text-xs text-white/60 mt-1">Mínimo 8 caracteres, con minúscula, mayúscula y número.</p>
+            </div>
+            <div class="md:col-span-2 mt-2">
+            <button type="submit" [disabled]="changingPassword || passwordForm.invalid" class="px-4 py-2 rounded border border-white/30 hover:bg-white/10 disabled:opacity-60">Cambiar contraseña</button>
+            </div>
+        </form>
+        </section>
+
+        <!-- Acciones -->
+        <section class="flex flex-wrap gap-3 justify-between">
+        <button (click)="logout()" class="px-4 py-2 rounded border text-red-500 border-red-500/20 hover:bg-red-500 hover:text-white transition-colors duration-300">Cerrar sesión</button>
+        <button (click)="goSupport()" class="px-6 py-2 rounded bg-white text-black hover:bg-white/90">Soporte</button>
+        </section>
+
+    </main>
+</div>

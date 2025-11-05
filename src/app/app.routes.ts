@@ -17,9 +17,21 @@ export const routes: Routes = [
     
     // Dashboard protegido
     { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
+    { path: 'settings', loadComponent: () => import('./features/settings/components/settings.component').then(c => c.SettingsComponent), canActivate: [AuthGuard] },
     { path: 'support', loadComponent: () => import('./features/support/components/support-home/support-home.component').then(c => c.SupportHomeComponent), canActivate: [AuthGuard, RoleGuard], data: { expectedRole: 'SUPPORT' } },
     { path: 'admin/supports', loadComponent: () => import('./features/admin/components/admin-supports/admin-supports.component').then(c => c.AdminSupportsComponent), canActivate: [AuthGuard, RoleGuard], data: { expectedRole: 'ADMIN' } },
     { path: 'admin', redirectTo: 'admin/supports', pathMatch: 'full' },
+    // Placeholders para que los routerLink no rompan hasta crear los módulos
+    { path: 'transactions', redirectTo: 'dashboard', pathMatch: 'full' },
+    { path: 'transactions/:child', redirectTo: 'dashboard', pathMatch: 'full' },
+    { path: 'benefits', redirectTo: 'dashboard', pathMatch: 'full' },
+    { path: 'crypto', redirectTo: 'dashboard', pathMatch: 'full' },
+    // { path: 'settings', redirectTo: 'dashboard', pathMatch: 'full' },
+    { path: 'services', redirectTo: 'dashboard', pathMatch: 'full' },
+    { path: 'services/:child', redirectTo: 'dashboard', pathMatch: 'full' },
+    { path: 'account', redirectTo: 'dashboard', pathMatch: 'full' },
+    { path: 'account/:child', redirectTo: 'dashboard', pathMatch: 'full' },
+    { path: 'settings/support', loadComponent: () => import('./features/settings/components/support-chat/support-chat.component').then(c => c.SupportChatComponent), canActivate: [AuthGuard] },
     // { path: 'account', component: null },   // TODO: Crear AccountComponent  
     // { path: 'transactions', component: null }, // TODO: Crear TransactionsComponent
     // { path: 'services', component: null },  // TODO: Crear ServicesComponent

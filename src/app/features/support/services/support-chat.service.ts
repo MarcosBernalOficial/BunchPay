@@ -4,10 +4,14 @@ import { Observable } from 'rxjs';
 
 export interface ChatSummary {
   id: number;
-  clientEmail: string | null;
-  clientName: string | null;
-  supportEmail: string | null;
+  // Campos que pueden venir del ChatDto de /support/chats
+  clientName?: string | null;
+  supportName?: string | null;
+  lastMessage?: string | null;
   closed: boolean;
+  // Compatibilidad con respuestas antiguas de /chats/support/*
+  clientEmail?: string | null;
+  supportEmail?: string | null;
 }
 
 export interface ChatMessage {
@@ -19,24 +23,25 @@ export interface ChatMessage {
 
 @Injectable({ providedIn: 'root' })
 export class SupportChatService {
-  private readonly API = 'http://localhost:8080/chats';
+  // Usamos el controlador dedicado a soporte
+  private readonly API = 'http://localhost:8080/support/chats';
 
   constructor(private http: HttpClient) {}
 
   getUnassigned(): Observable<ChatSummary[]> {
-    return this.http.get<ChatSummary[]>(`${this.API}/support/unassigned`);
+    return this.http.get<ChatSummary[]>(`${this.API}/unassigned`);
   }
 
   getMyChats(): Observable<ChatSummary[]> {
-    return this.http.get<ChatSummary[]>(`${this.API}/support/my`);
+    return this.http.get<ChatSummary[]>(`${this.API}`);
   }
 
-  assign(chatId: number): Observable<ChatSummary> {
-    return this.http.post<ChatSummary>(`${this.API}/${chatId}/assign`, {});
+  assign(chatId: number): Observable<any> {
+    return this.http.put(`${this.API}/${chatId}/assign`, {});
   }
 
-  close(chatId: number): Observable<void> {
-    return this.http.post<void>(`${this.API}/${chatId}/close`, {});
+  close(chatId: number): Observable<any> {
+    return this.http.put(`${this.API}/${chatId}/close`, {});
   }
 
   getMessages(chatId: number): Observable<ChatMessage[]> {
