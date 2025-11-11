@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone, inject } from '@angular/core';
 import { Client, IMessage, StompSubscription, IFrame } from '@stomp/stompjs';
 // Usar el build de navegador para evitar dependencias de Node (global)
 import SockJS from 'sockjs-client/dist/sockjs';
@@ -9,6 +9,7 @@ export class ChatService {
   private client: Client | null = null;
   private subscriptions: Map<string, StompSubscription> = new Map();
   private subjects: Map<string, Subject<any>> = new Map();
+  private zone = inject(NgZone);
 
   private get token(): string | null {
     return sessionStorage.getItem('token');
@@ -56,12 +57,15 @@ export class ChatService {
         throw new Error('WebSocket not connected');
       }
       const sub = this.client.subscribe(topic, (message: IMessage) => {
-        try {
-          const body = JSON.parse(message.body);
-          subject.next(body);
-        } catch {
-          subject.next(message.body);
-        }
+        // Asegurar que el callback se ejecute dentro de Angular para disparar CD con OnPush
+        this.zone.run(() => {
+          try {
+            const body = JSON.parse(message.body);
+            subject.next(body);
+          } catch {
+            subject.next(message.body);
+          }
+        });
       });
       this.subscriptions.set(topic, sub);
     }
@@ -100,5 +104,21 @@ export class ChatService {
     }
     const destination = `/app/chats/${chatId}/send`;
     this.client.publish({ destination, body: JSON.stringify({ content }) });
+  }
+
+  /** Unsubscribe from a specific STOMP topic */
+  unsubscribeFromTopic(topic: string): void {
+    const sub = this.subscriptions.get(topic);
+    if (sub) {
+      try { sub.unsubscribe(); } catch {}
+      this.subscriptions.delete(topic);
+    }
+    // también limpiar subject para evitar fugas si no habrá más oyentes
+    this.subjects.delete(topic);
+  }
+
+  /** Unsubscribe helper for a chat topic */
+  unsubscribeFromChat(chatId: number): void {
+    this.unsubscribeFromTopic(`/topic/chats/${chatId}`);
   }
 }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatService } from '../../../chat/services/chat.service';
@@ -18,6 +18,8 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
   private api = inject(SupportChatService);
   private auth = inject(AuthService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
+  private refreshTimer: any; // id del intervalo de auto-refresh
 
   tab: 'unassigned' | 'my' = 'unassigned';
   unassigned: ChatSummary[] = [];
@@ -27,9 +29,14 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
   newMessage = '';
   loading = false;
   closing = false;
+  loadingLists = false;
+  loadingMessages = false;
 
   async ngOnInit() {
     await this.ws.connect().catch(() => {});
+    // primer render: mostrar loader de listas
+    this.loadingLists = true;
+    this.cdr.markForCheck();
     this.refreshLists();
     // Suscribirse a eventos de cambios en la lista de sin asignar (nuevo mensaje, creado, asignado, cerrado)
     try {
@@ -37,19 +44,31 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
     } catch {
       // si falla la suscripción, la UI seguirá funcionando con refresh manual por acciones
     }
+    // Auto-refresh cada 8 segundos como respaldo para asegurar estado consistente
+    this.refreshTimer = setInterval(() => this.refreshLists(), 8000);
   }
 
   ngOnDestroy(): void {
     this.ws.disconnect();
+    if (this.refreshTimer) {
+      clearInterval(this.refreshTimer);
+    }
   }
 
   async refreshLists() {
+    const firstLoad = this.unassigned.length === 0 && this.myChats.length === 0;
+    if (firstLoad) {
+      this.loadingLists = true;
+      this.cdr.markForCheck();
+    }
     try {
       this.unassigned = await this.api.getUnassigned();
     } catch { /* ignore */ }
     try {
       this.myChats = await this.api.getMyChats();
     } catch { /* ignore */ }
+    this.loadingLists = false;
+    this.cdr.markForCheck();
   }
 
   // Determina si el mensaje es del soporte (yo) para alinear a la derecha
@@ -70,14 +89,26 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
   }
 
   async pick(chat: ChatSummary) {
+    // Cancelar subscripción previa si había otro chat
+    if (this.selected) {
+      this.ws.unsubscribeFromChat(this.selected.id);
+    }
     this.selected = chat;
     this.messages = [];
+    this.loadingMessages = true;
+    this.cdr.markForCheck();
     try {
       this.messages = await this.api.getMessages(chat.id);
     } catch { this.messages = []; }
-    this.ws.subscribeToChat(chat.id).subscribe(msg => {
-      this.messages = [...this.messages, msg];
-    });
+    this.loadingMessages = false;
+    this.cdr.markForCheck();
+    // Suscribirse a mensajes nuevos
+    try {
+      this.ws.subscribeToChat(chat.id).subscribe(msg => {
+        this.messages = [...this.messages, msg];
+        this.cdr.markForCheck();
+      });
+    } catch { /* ignore ws errors */ }
   }
 
   async assignSelected() {
@@ -92,6 +123,7 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
       this.selected = list.find(c => c.id === assignedId) || null;
       // Actualizar también la lista de sin asignar
       this.unassigned = await this.api.getUnassigned();
+      this.cdr.markForCheck();
     } catch { /* ignore */ }
   }
 
@@ -104,11 +136,13 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
       this.selected = { ...this.selected!, closed: true };
       this.myChats = await this.api.getMyChats();
       this.unassigned = await this.api.getUnassigned();
+      this.cdr.markForCheck();
     } catch (err: any) {
       if (err?.status === 400) {
         this.selected = { ...this.selected!, closed: true };
         this.myChats = await this.api.getMyChats();
         this.unassigned = await this.api.getUnassigned();
+        this.cdr.markForCheck();
       } else if (err?.status === 403) {
         alert('No estás asignado a este chat.');
       } else {
@@ -123,6 +157,7 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
     if (!this.selected || !this.newMessage.trim()) return;
     this.ws.sendMessage(this.selected.id, this.newMessage.trim());
     this.newMessage = '';
+    this.cdr.markForCheck();
   }
 
   logout() {

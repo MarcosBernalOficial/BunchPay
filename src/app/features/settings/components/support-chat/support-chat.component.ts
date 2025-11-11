@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
@@ -17,6 +17,7 @@ export class SupportChatComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private clientChat = inject(ClientChatService);
   private ws = inject(ChatService);
+  private cdr = inject(ChangeDetectorRef);
 
   chat: ClientChatSummary | null = null;
   messages: ClientChatMessage[] = [];
@@ -30,7 +31,11 @@ export class SupportChatComponent implements OnInit, OnDestroy {
   async ngOnInit() {
     this.loading = true;
     try {
-      await this.ws.connect();
+      // No bloquear la UI si el WS tarda o falla: timeout de 1500ms
+      await Promise.race([
+        this.ws.connect().catch(() => {}),
+        new Promise<void>(res => setTimeout(res, 1500))
+      ]);
       const chats = await this.clientChat.listMyChats();
       let active: ClientChatSummary | null = chats.find(c => !c.closed) || null;
       if (!active) {
@@ -47,9 +52,11 @@ export class SupportChatComponent implements OnInit, OnDestroy {
         const msg: ClientChatMessage = typeof event === 'string' ? { id: Date.now(), content: event, date: new Date().toISOString(), sender: { email: 'system', role: 'SYSTEM' } } as any : event;
         this.messages = [...this.messages, msg];
         // scroll al final lo maneja la vista si agregamos autoscroll
+        this.cdr.markForCheck();
       });
     } finally {
       this.loading = false;
+      this.cdr.markForCheck();
     }
   }
 
