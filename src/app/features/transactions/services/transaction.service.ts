@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, tap } from 'rxjs';
 import { TransferRequest } from '../models/transfer-request.interface';
 import { Transaction } from '../models/transaction.interface';
 
@@ -17,7 +17,32 @@ export class TransactionService {
      * Realizar transferencia
      */
     async makeTransfer(transferData: TransferRequest): Promise<string> {
-        return await firstValueFrom(this.http.post<string>(`${this.API_URL}/transfer`, transferData));
+        // LOG: antes de enviar
+        console.log('[TransactionService] Sending POST /transactions/transfer', {
+            ts: new Date().toISOString(),
+            operationId: transferData.operationId,
+            payload: transferData
+        });
+        return await firstValueFrom(
+            this.http
+                .post(`${this.API_URL}/transfer`, transferData, { responseType: 'text' })
+                .pipe(
+                    tap({
+                        next: (res) =>
+                            console.log('[TransactionService] OK /transactions/transfer', {
+                                ts: new Date().toISOString(),
+                                operationId: transferData.operationId,
+                                response: res
+                            }),
+                        error: (err) =>
+                            console.log('[TransactionService] ERROR /transactions/transfer', {
+                                ts: new Date().toISOString(),
+                                operationId: transferData.operationId,
+                                error: err
+                            })
+                    })
+                )
+        );
     }
 
     /**

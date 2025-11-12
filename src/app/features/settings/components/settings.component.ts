@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -18,10 +18,13 @@ export class SettingsComponent implements OnInit {
   private accountService = inject(AccountService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   loadingProfile = false;
   savingProfile = false;
   changingPassword = false;
+  showCurrentPassword = false;
+  showNewPassword = false;
 
   message: { type: 'success' | 'error'; text: string } | null = null;
 
@@ -74,14 +77,26 @@ export class SettingsComponent implements OnInit {
     }
     const { firstName, lastName, dni } = this.profileForm.getRawValue();
     this.savingProfile = true;
+    this.setMessage('success', 'Guardando perfil...');
+    this.cdr.markForCheck();
     (async () => {
       try {
-        await this.accountService.updateProfile({ firstName: firstName!, lastName: lastName!, dni: dni! });
-        this.setMessage('success', 'Perfil actualizado');
+        const updated = await this.accountService.updateProfile({ firstName: firstName!, lastName: lastName!, dni: dni! });
+        // Refrescar formulario con la respuesta del backend por si normaliza/corrige datos
+        this.profileForm.patchValue({
+          firstName: updated.firstName,
+          lastName: updated.lastName,
+          dni: updated.dni
+        });
+        // Refrescar resumen global (header, etc.) si lo usa la app
+        try { await this.accountService.loadAccountSummary(); } catch {}
+        this.setMessage('success', 'Perfil guardado correctamente');
+        this.cdr.detectChanges();
       } catch {
-        this.setMessage('error', 'No se pudo actualizar el perfil');
+        this.setMessage('error', 'No se pudo guardar el perfil');
       } finally {
         this.savingProfile = false;
+        this.cdr.detectChanges();
       }
     })();
   }
@@ -93,15 +108,19 @@ export class SettingsComponent implements OnInit {
     }
     const { currentPassword, newPassword } = this.passwordForm.getRawValue();
     this.changingPassword = true;
+    this.setMessage('success', 'Guardando contraseña...');
+    this.cdr.markForCheck();
     (async () => {
       try {
         await this.accountService.changePassword({ currentPassword: currentPassword!, newPassword: newPassword! });
-        this.setMessage('success', 'Contraseña actualizada');
+        this.setMessage('success', 'Contraseña actualizada correctamente');
         this.passwordForm.reset();
+        this.cdr.detectChanges();
       } catch {
         this.setMessage('error', 'No se pudo cambiar la contraseña. Verificá la actual.');
       } finally {
         this.changingPassword = false;
+        this.cdr.detectChanges();
       }
     })();
   }
@@ -121,6 +140,14 @@ export class SettingsComponent implements OnInit {
 
   private setMessage(type: 'success' | 'error', text: string) {
     this.message = { type, text };
-    setTimeout(() => (this.message = null), 4000);
+    this.cdr.markForCheck();
+    // Mensaje se disipa tras 3.5s si es success, 5s si error
+    const timeout = type === 'success' ? 3500 : 5000;
+    setTimeout(() => {
+      if (this.message?.text === text) {
+        this.message = null;
+        this.cdr.markForCheck();
+      }
+    }, timeout);
   }
 }

@@ -23,8 +23,12 @@
 
                         <!-- Mensaje global -->
                         @if (message) {
-                            <div class="p-3 rounded border" [class.border-green-400]="message.type==='success'" [class.border-red-400]="message.type==='error'">
-                                {{ message.text }}
+                            <div class="p-3 rounded border flex items-center gap-2"
+                                 [class.border-green-400]="message.type==='success'"
+                                 [class.border-red-400]="message.type==='error'">
+                                @if (message.type==='success') { <span class="text-green-400">✔</span> }
+                                @if (message.type==='error') { <span class="text-red-400">⚠</span> }
+                                <span>{{ message.text }}</span>
                             </div>
                         }
 
@@ -49,7 +53,9 @@
             <input type="email" formControlName="email" class="w-full bg-transparent border border-white/20 rounded px-3 py-2 outline-none" readonly />
             </div>
             <div class="md:col-span-2 mt-2">
-            <button type="submit" [disabled]="savingProfile || profileForm.invalid" class="px-4 py-2 rounded bg-white text-black hover:bg-white/90 disabled:opacity-60">Guardar perfil</button>
+                        <button type="submit" [disabled]="savingProfile || profileForm.invalid" class="px-4 py-2 rounded bg-white text-black hover:bg-white/90 disabled:opacity-60">
+                            {{ savingProfile ? 'Guardando...' : 'Guardar perfil' }}
+                        </button>
             </div>
         </form>
         </section>
@@ -58,17 +64,49 @@
         <section class="border border-white/10 rounded-xl p-5 bg-white/5">
         <h2 class="text-xl font-semibold mb-4">Cambiar contraseña</h2>
         <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-            <label class="block text-sm text-white/70 mb-1">Contraseña actual</label>
-            <input type="password" formControlName="currentPassword" class="w-full bg-transparent border border-white/20 rounded px-3 py-2 outline-none" />
-            </div>
-            <div>
-            <label class="block text-sm text-white/70 mb-1">Contraseña nueva</label>
-            <input type="password" formControlName="newPassword" class="w-full bg-transparent border border-white/20 rounded px-3 py-2 outline-none" />
-            <p class="text-xs text-white/60 mt-1">Mínimo 8 caracteres, con minúscula, mayúscula y número.</p>
-            </div>
+                        <div>
+                        <label class="block text-sm text-white/70 mb-1">Contraseña actual</label>
+                        <div class="relative">
+                            <input [type]="showCurrentPassword ? 'text' : 'password'" formControlName="currentPassword" class="w-full bg-transparent border border-white/20 rounded px-3 py-2 pr-12 outline-none" />
+                                            <button type="button" (click)="showCurrentPassword = !showCurrentPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-white/60 hover:text-white transition-colors duration-200">
+                                                @if (!showCurrentPassword) {
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                    </svg>
+                                                }
+                                                @if (showCurrentPassword) {
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+                                                    </svg>
+                                                }
+                                            </button>
+                        </div>
+                        </div>
+                        <div>
+                        <label class="block text-sm text-white/70 mb-1">Contraseña nueva</label>
+                        <div class="relative">
+                            <input [type]="showNewPassword ? 'text' : 'password'" formControlName="newPassword" class="w-full bg-transparent border border-white/20 rounded px-3 py-2 pr-12 outline-none" />
+                                            <button type="button" (click)="showNewPassword = !showNewPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-white/60 hover:text-white transition-colors duration-200">
+                                                @if (!showNewPassword) {
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                    </svg>
+                                                }
+                                                @if (showNewPassword) {
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+                                                    </svg>
+                                                }
+                                            </button>
+                        </div>
+                        <p class="text-xs text-white/60 mt-1">Mínimo 8 caracteres, con minúscula, mayúscula y número.</p>
+                        </div>
             <div class="md:col-span-2 mt-2">
-            <button type="submit" [disabled]="changingPassword || passwordForm.invalid" class="px-4 py-2 rounded border border-white/30 hover:bg-white/10 disabled:opacity-60">Cambiar contraseña</button>
+                        <button type="submit" [disabled]="changingPassword || passwordForm.invalid" class="px-4 py-2 rounded border border-white/30 hover:bg-white/10 disabled:opacity-60">
+                            {{ changingPassword ? 'Guardando...' : 'Cambiar contraseña' }}
+                        </button>
             </div>
         </form>
         </section>

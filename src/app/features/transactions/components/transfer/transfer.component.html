@@ -1,0 +1,53 @@
+<div class="min-h-screen bg-black text-white">
+    <header class="border-b border-white/10">
+        <div class="max-w-3xl mx-auto px-4 py-5 flex items-center justify-between gap-3">
+            <a routerLink="/dashboard" class="text-white border border-white px-3 py-1 hover:text-black hover:bg-white hover:rounded transition-all duration-300">Volver</a>
+            <h1 class="text-xl font-semibold">Transferir</h1>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 py-6">
+        <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-5">
+
+        <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+            <div>
+            <label class="block text-sm text-white/70 mb-1">Alias de destino</label>
+            <input type="text" formControlName="receiverAlias" class="w-full rounded-md bg-white/5 border border-white/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/30" placeholder="alias.destino.bpay" />
+            <div class="text-xs text-white/50 mt-1">Podés completar Alias o CVU (uno de los dos).</div>
+            </div>
+            <div>
+            <label class="block text-sm text-white/70 mb-1">CVU de destino</label>
+            <input type="text" formControlName="receiverCVU" class="w-full rounded-md bg-white/5 border border-white/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/30" placeholder="0000000000000000000000" />
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+            <div>
+            <label class="block text-sm text-white/70 mb-1">Monto</label>
+            <input type="number" min="0" step="0.01" formControlName="amount" class="w-full rounded-md bg-white/5 border border-white/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/30" placeholder="0.00" />
+            @if (amount?.touched && amount?.errors?.['required']) {
+                <div class="text-xs text-red-400 mt-1">El monto es obligatorio</div>
+            }
+            @if (amount?.touched && amount?.errors?.['min']) {
+                <div class="text-xs text-red-400 mt-1">El monto debe ser mayor a 0</div>
+            }
+            </div>
+            <div>
+            <label class="block text-sm text-white/70 mb-1">Descripción (opcional)</label>
+            <input type="text" formControlName="description" maxlength="120" class="w-full rounded-md bg-white/5 border border-white/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/30" placeholder="Ej: Pago almuerzo" />
+            </div>
+        </div>
+
+        @if (errorMessage()) {
+            <div class="text-sm text-red-400">{{ errorMessage() }}</div>
+        }
+        @if (successMessage()) {
+            <div class="text-sm text-green-400">{{ successMessage() }}</div>
+        }
+
+        <button type="submit" [disabled]="loading()" class="px-4 py-2 border border-white text-white hover:bg-white hover:text-black hover:rounded-md transition-all duration-300 w-full">
+            {{ loading() ? 'Enviando…' : 'Transferir' }}
+        </button>
+        </form>
+    </main>
+</div>

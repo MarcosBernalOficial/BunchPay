@@ -22,8 +22,7 @@ export const routes: Routes = [
     { path: 'admin/supports', loadComponent: () => import('./features/admin/components/admin-supports/admin-supports.component').then(c => c.AdminSupportsComponent), canActivate: [AuthGuard, RoleGuard], data: { expectedRole: 'ADMIN' } },
     { path: 'admin', redirectTo: 'admin/supports', pathMatch: 'full' },
     // Placeholders para que los routerLink no rompan hasta crear los módulos
-    { path: 'transactions', redirectTo: 'dashboard', pathMatch: 'full' },
-    { path: 'transactions/:child', redirectTo: 'dashboard', pathMatch: 'full' },
+    { path: 'transactions/transfer', loadComponent: () => import('./features/transactions/components/transfer/transfer.component').then(c => c.TransferComponent), canActivate: [AuthGuard] },
     { path: 'benefits', redirectTo: 'dashboard', pathMatch: 'full' },
     { path: 'crypto', redirectTo: 'dashboard', pathMatch: 'full' },
     // { path: 'settings', redirectTo: 'dashboard', pathMatch: 'full' },

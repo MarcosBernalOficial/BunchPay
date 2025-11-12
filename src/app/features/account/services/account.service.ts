@@ -54,16 +54,18 @@ export class AccountService {
      * Actualizar perfil del cliente
      */
     async updateProfile(profileData: Partial<ClientProfile>): Promise<ClientProfile> {
-        // Backend mapea PUT /client/profile
-        return await firstValueFrom(this.http.put<ClientProfile>(`${this.API_URL}/client/profile`, profileData));
+        // Backend responde texto en PUT /client/profile, no JSON.
+        await firstValueFrom(this.http.put(`${this.API_URL}/client/profile`, profileData, { responseType: 'text' }));
+        // Luego traemos el perfil actualizado para devolver el objeto consistente
+        return await this.getClientProfile();
     }
 
     /**
      * Cambiar contraseña
      */
     async changePassword(passwordData: PasswordChange): Promise<void> {
-        // Backend mapea PUT /client/change-password
-        await firstValueFrom(this.http.put(`${this.API_URL}/client/change-password`, passwordData));
+        // Backend responde texto en PUT /client/change-password, forzamos responseType 'text' para evitar error de parseo.
+        await firstValueFrom(this.http.put(`${this.API_URL}/client/change-password`, passwordData, { responseType: 'text' }));
     }
 
     /**
