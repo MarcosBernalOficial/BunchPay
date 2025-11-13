@@ -5,10 +5,11 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 
 import { ClientChatService, ClientChatMessage, ClientChatSummary } from '../../../../features/chat/services/client-chat.service';
 import { ChatService } from '../../../../features/chat/services/chat.service';
+import { PageHeaderComponent, NavLink } from '../../../../shared/components/page-header/page-header.component';
 
 @Component({
   selector: 'app-support-chat',
-  imports: [CommonModule, RouterModule, ReactiveFormsModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, PageHeaderComponent],
   templateUrl: './support-chat.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -18,6 +19,12 @@ export class SupportChatComponent implements OnInit, OnDestroy {
   private clientChat = inject(ClientChatService);
   private ws = inject(ChatService);
   private cdr = inject(ChangeDetectorRef);
+
+  navLinks: NavLink[] = [
+    { label: 'Home', route: '/dashboard' },
+    { label: 'Crypto', route: '/crypto' },
+    { label: 'Configuración', route: '/settings' }
+  ];
 
   chat: ClientChatSummary | null = null;
   messages: ClientChatMessage[] = [];
@@ -54,6 +61,12 @@ export class SupportChatComponent implements OnInit, OnDestroy {
         // scroll al final lo maneja la vista si agregamos autoscroll
         this.cdr.markForCheck();
       });
+
+      // Suscribirse a eventos de cierre de chat
+      this.ws.subscribeToTopic(`/topic/chats/${this.chat.id}/closed`).subscribe(async () => {
+        // El support cerró el chat
+        await this.handleChatClosed();
+      });
     } finally {
       this.loading = false;
       this.cdr.markForCheck();
@@ -62,6 +75,56 @@ export class SupportChatComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.ws.disconnect();
+  }
+
+  private async handleChatClosed(): Promise<void> {
+    if (!this.chat) return;
+
+    // Desconectar del chat cerrado
+    this.ws.unsubscribeFromChat(this.chat.id);
+    this.ws.unsubscribeFromTopic(`/topic/chats/${this.chat.id}/closed`);
+
+    // Limpiar mensajes
+    this.messages = [];
+    this.chat = null;
+    this.cdr.markForCheck();
+
+    // Crear nuevo chat automáticamente
+    try {
+      const newChat = await this.clientChat.startChat();
+      this.chat = newChat;
+
+      // Cargar mensajes del nuevo chat (debería estar vacío)
+      const history = await this.clientChat.getMessages(newChat.id);
+      this.messages = history;
+
+      // Agregar mensaje informativo del sistema
+      const systemMessage: ClientChatMessage = {
+        id: Date.now(),
+        content: 'El soporte ha cerrado el chat anterior. Esta es una nueva conversación.',
+        date: new Date().toISOString(),
+        sender: { email: 'system', role: 'SYSTEM' },
+        senderType: 'SUPPORT',
+        senderName: 'Sistema'
+      };
+      this.messages = [...this.messages, systemMessage];
+
+      // Suscribirse al nuevo chat
+      this.ws.subscribeToChat(newChat.id).subscribe(event => {
+        const msg: ClientChatMessage = typeof event === 'string' ? { id: Date.now(), content: event, date: new Date().toISOString(), sender: { email: 'system', role: 'SYSTEM' } } as any : event;
+        this.messages = [...this.messages, msg];
+        this.cdr.markForCheck();
+      });
+
+      // Suscribirse a eventos de cierre del nuevo chat
+      this.ws.subscribeToTopic(`/topic/chats/${newChat.id}/closed`).subscribe(async () => {
+        await this.handleChatClosed();
+      });
+
+      this.cdr.markForCheck();
+    } catch (err) {
+      console.error('Error al crear nuevo chat:', err);
+    }
   }
 
   back(): void {
@@ -78,8 +141,11 @@ export class SupportChatComponent implements OnInit, OnDestroy {
     try {
       this.ws.sendMessage(this.chat.id, content!);
       this.form.reset();
+    } catch (err) {
+      console.error('Error al enviar mensaje:', err);
     } finally {
       this.sending = false;
+      this.cdr.markForCheck();
     }
   }
 

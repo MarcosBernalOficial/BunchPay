@@ -31,6 +31,11 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
   closing = false;
   loadingLists = false;
   loadingMessages = false;
+  assigning = false;
+  assignSuccess: string | null = null;
+  assignError: string | null = null;
+  closeSuccess: string | null = null;
+  closeError: string | null = null;
 
   async ngOnInit() {
     await this.ws.connect().catch(() => {});
@@ -114,42 +119,196 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
   async assignSelected() {
     if (!this.selected) return;
     const assignedId = this.selected.id;
+    const clientName = this.selected.clientName || this.selected.clientEmail;
+    
+    // Limpiar mensajes previos
+    this.assignSuccess = null;
+    this.assignError = null;
+    this.assigning = true;
+    this.cdr.markForCheck();
+    
     try {
       await this.api.assign(assignedId);
-      // Mover a la pestaña "Mis chats" y reseleccionar el chat asignado
-      this.tab = 'my';
-      const list = await this.api.getMyChats();
-      this.myChats = list;
-      this.selected = list.find(c => c.id === assignedId) || null;
-      // Actualizar también la lista de sin asignar
-      this.unassigned = await this.api.getUnassigned();
+      
+      // Actualizar listas
+      await this.refreshLists();
+      
+      // Encontrar el chat asignado
+      const assignedChat = this.myChats.find(c => c.id === assignedId);
+      
+      if (assignedChat) {
+        // Mover a la pestaña "Mis chats"
+        this.tab = 'my';
+        // Reseleccionar el chat asignado para cargar sus mensajes
+        this.selected = assignedChat;
+        
+        // Cargar mensajes del chat asignado
+        this.loadingMessages = true;
+        this.cdr.markForCheck();
+        try {
+          this.messages = await this.api.getMessages(assignedId);
+        } catch { 
+          this.messages = []; 
+        }
+        this.loadingMessages = false;
+        
+        // Suscribirse a mensajes nuevos del chat asignado
+        try {
+          this.ws.subscribeToChat(assignedId).subscribe(msg => {
+            this.messages = [...this.messages, msg];
+            this.cdr.markForCheck();
+          });
+        } catch { /* ignore ws errors */ }
+        
+        // Mostrar mensaje de éxito
+        this.assignSuccess = `Chat de ${clientName} asignado correctamente`;
+        setTimeout(() => {
+          this.assignSuccess = null;
+          this.cdr.markForCheck();
+        }, 3000);
+      }
+      
       this.cdr.markForCheck();
-    } catch { /* ignore */ }
+    } catch (err: any) {
+      // Verificar si el chat realmente se asignó a pesar del error
+      let chatReallyWasAssigned = false;
+      
+      try {
+        await this.refreshLists();
+        const assignedChat = this.myChats.find(c => c.id === assignedId);
+        if (assignedChat) {
+          chatReallyWasAssigned = true;
+          
+          // Mover a la pestaña "Mis chats" y reseleccionar
+          this.tab = 'my';
+          this.selected = assignedChat;
+          
+          // Cargar mensajes
+          this.loadingMessages = true;
+          this.cdr.markForCheck();
+          try {
+            this.messages = await this.api.getMessages(assignedId);
+          } catch { 
+            this.messages = []; 
+          }
+          this.loadingMessages = false;
+          
+          // Suscribirse a mensajes nuevos
+          try {
+            this.ws.subscribeToChat(assignedId).subscribe(msg => {
+              this.messages = [...this.messages, msg];
+              this.cdr.markForCheck();
+            });
+          } catch { /* ignore ws errors */ }
+        }
+      } catch {
+        // Si falla la verificación, asumir que no se asignó
+      }
+      
+      if (chatReallyWasAssigned) {
+        // El chat se asignó exitosamente (aunque hubo un error en la respuesta)
+        this.assignSuccess = `Chat de ${clientName} asignado correctamente`;
+        setTimeout(() => {
+          this.assignSuccess = null;
+          this.cdr.markForCheck();
+        }, 3000);
+      } else {
+        // Error real: el chat no se asignó
+        if (err?.status === 409) {
+          this.assignError = 'Este chat ya está asignado a otro agente';
+        } else if (err?.status === 404) {
+          this.assignError = 'Chat no encontrado';
+        } else {
+          this.assignError = 'No se pudo asignar el chat. Intentá nuevamente.';
+        }
+        
+        setTimeout(() => {
+          this.assignError = null;
+          this.cdr.markForCheck();
+        }, 4000);
+      }
+      
+      this.cdr.markForCheck();
+    } finally {
+      this.assigning = false;
+      this.cdr.markForCheck();
+    }
   }
 
   async closeSelected() {
     if (!this.selected) return;
     const id = this.selected.id;
+    const clientName = this.selected.clientName || this.selected.clientEmail;
+    
+    // Limpiar mensajes previos
+    this.closeSuccess = null;
+    this.closeError = null;
     this.closing = true;
+    this.cdr.markForCheck();
+    
     try {
       await this.api.close(id);
+      
+      // Éxito: actualizar el estado del chat seleccionado
       this.selected = { ...this.selected!, closed: true };
-      this.myChats = await this.api.getMyChats();
-      this.unassigned = await this.api.getUnassigned();
+      
+      // Actualizar listas
+      await this.refreshLists();
+      
+      // Mostrar mensaje de éxito
+      this.closeSuccess = `Chat de ${clientName} cerrado correctamente`;
+      setTimeout(() => {
+        this.closeSuccess = null;
+        this.cdr.markForCheck();
+      }, 3000);
+      
       this.cdr.markForCheck();
     } catch (err: any) {
+      // Verificar si el chat realmente se cerró a pesar del error
+      let chatReallyWasClosed = false;
+      
       if (err?.status === 400) {
-        this.selected = { ...this.selected!, closed: true };
-        this.myChats = await this.api.getMyChats();
-        this.unassigned = await this.api.getUnassigned();
-        this.cdr.markForCheck();
-      } else if (err?.status === 403) {
-        alert('No estás asignado a este chat.');
+        // Error 400: El chat ya estaba cerrado - tratarlo como éxito
+        chatReallyWasClosed = true;
       } else {
-        alert('No se pudo cerrar el chat.');
+        // Para otros errores, verificar el estado real del chat
+        try {
+          await this.refreshLists();
+          const updatedChat = this.myChats.find(c => c.id === id) || this.unassigned.find(c => c.id === id);
+          if (updatedChat && updatedChat.closed) {
+            chatReallyWasClosed = true;
+          }
+        } catch {
+          // Si falla la verificación, asumir que no se cerró
+        }
       }
+      
+      if (chatReallyWasClosed) {
+        // El chat se cerró exitosamente (aunque hubo un error en la respuesta)
+        this.selected = { ...this.selected!, closed: true };
+        this.closeSuccess = `Chat de ${clientName} cerrado correctamente`;
+        setTimeout(() => {
+          this.closeSuccess = null;
+          this.cdr.markForCheck();
+        }, 3000);
+      } else {
+        // Error real: el chat no se cerró
+        if (err?.status === 403) {
+          this.closeError = 'No estás asignado a este chat';
+        } else {
+          this.closeError = 'No se pudo cerrar el chat. Intentá nuevamente.';
+        }
+        
+        setTimeout(() => {
+          this.closeError = null;
+          this.cdr.markForCheck();
+        }, 4000);
+      }
+      
+      this.cdr.markForCheck();
     } finally {
       this.closing = false;
+      this.cdr.markForCheck();
     }
   }
 
