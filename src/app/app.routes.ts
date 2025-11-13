@@ -27,7 +27,7 @@ export const routes: Routes = [
     { path: 'account/card', loadComponent: () => import('./features/account/components/cards/cards.component').then(c => c.CardsComponent), canActivate: [AuthGuard] },
     { path: 'services/recharge', loadComponent: () => import('./features/services/components/recharge/recharge.component').then(c => c.RechargeComponent), canActivate: [AuthGuard] },
     { path: 'benefits', redirectTo: 'dashboard', pathMatch: 'full' },
-    { path: 'crypto', redirectTo: 'dashboard', pathMatch: 'full' },
+    { path: 'crypto', loadComponent: () => import('./features/crypto/components/crypto-list/crypto-list.component').then(c => c.CryptoListComponent), canActivate: [AuthGuard] },
     // { path: 'settings', redirectTo: 'dashboard', pathMatch: 'full' },
     { path: 'services', redirectTo: 'dashboard', pathMatch: 'full' },
     { path: 'services/:child', redirectTo: 'dashboard', pathMatch: 'full' },
@@ -37,7 +37,6 @@ export const routes: Routes = [
     // { path: 'account', component: null },   // TODO: Crear AccountComponent  
     // { path: 'transactions', component: null }, // TODO: Crear TransactionsComponent
     // { path: 'services', component: null },  // TODO: Crear ServicesComponent
-    // { path: 'crypto', component: null },    // TODO: Crear CryptoComponent
 
     // Rutas de error
     { path: 'unauthorized', redirectTo: '/auth/login' },
