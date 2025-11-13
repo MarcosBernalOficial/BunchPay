@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, ChangeDetectorRef } from '@angular/core';
-import { CommonModule, NgIf } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -7,7 +7,7 @@ import { matchFieldsValidator, markAllAsTouched } from '../../../../shared/utils
 
 @Component({
     selector: 'app-register',
-    imports: [CommonModule, NgIf, ReactiveFormsModule, RouterLink],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink],
     templateUrl: './register.component.html',
     styleUrls: ['./register.component.css'],
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -30,8 +30,8 @@ export class RegisterComponent {
     constructor() {
         this.registerForm = this.fb.group({
         personal: this.fb.group({
-            firstName: ['', [Validators.required, Validators.minLength(2)]],
-            lastName: ['', [Validators.required, Validators.minLength(2)]],
+            firstName: ['', [Validators.required, Validators.minLength(2), Validators.pattern(/^[A-Za-zÁÉÍÓÚáéíóúÑñÜü]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñÜü]+)?$/)]],
+            lastName: ['', [Validators.required, Validators.minLength(2), Validators.pattern(/^[A-Za-zÁÉÍÓÚáéíóúÑñÜü]+(?:\s[A-Za-zÁÉÍÓÚáéíóúÑñÜü]+)?$/)]],
             dni: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
         }),
         credentials: this.fb.group({

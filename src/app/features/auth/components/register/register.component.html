@@ -33,6 +33,9 @@
                                     @if (registerForm.get('personal.firstName')?.errors?.['minlength']) {
                                         <span>El nombre debe tener al menos 2 caracteres</span>
                                     }
+                                    @if(registerForm.get('personal.firstName')?.errors?.['pattern']) {
+                                        <span>El nombre solo puede contener letras y un espacio opcional</span>
+                                    }
                                 </div>
                             }
                         </div>
@@ -56,6 +59,9 @@
                                     }
                                     @if (registerForm.get('personal.lastName')?.errors?.['minlength']) {
                                         <span>El apellido debe tener al menos 2 caracteres</span>
+                                    }
+                                    @if(registerForm.get('personal.lastName')?.errors?.['pattern']) {
+                                        <span>El apellido solo puede contener letras y un espacio opcional</span>
                                     }
                                 </div>
                             }
@@ -131,33 +137,45 @@
                                     class="w-full px-3 py-2 pr-10 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-white/50 focus:border-white/50 transition-colors bg-black text-white"
                                     [class.border-red-500]="registerForm.get('credentials.password')?.invalid && registerForm.get('credentials.password')?.touched"
                                     placeholder="Tu contraseña"
+                                    (copy)="false"
+                                    (paste)="false"
+                                    (cut)="false"
                                 />
                                 <button 
                                     type="button" 
                                     (click)="showPassword = !showPassword"
                                     class="absolute inset-y-0 right-0 pr-3 flex items-center text-white hover:text-gray-300"
                                 >
-                                    <svg *ngIf="!showPassword" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                @if (!showPassword) {
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
-                                    <svg *ngIf="showPassword" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                } @else {
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
                                     </svg>
+                                }
                                 </button>
                             </div>
-                            <div *ngIf="registerForm.get('credentials.password')?.touched" class="mt-1 text-sm text-red-300 space-y-1">
-                                <span *ngIf="registerForm.get('credentials.password')?.errors?.['required']">La contraseña es requerida</span>
-                                <span *ngIf="registerForm.get('credentials.password')?.errors?.['minlength']">La contraseña debe tener al menos 8 caracteres</span>
-                                <ng-container *ngIf="passwordPatternError">
+                            @if (registerForm.get('credentials.password')?.touched && registerForm.get('credentials.password')?.invalid){
+                            <div class="mt-1 text-sm text-red-300 space-y-1">
+                                @if(registerForm.get('credentials.password')?.errors?.['required']) {
+                                <span>La contraseña es requerida</span>
+                                }
+                                @if(registerForm.get('credentials.password')?.errors?.['minlength']) {
+                                <span>La contraseña debe tener al menos 8 caracteres</span>
+                                }
+                                @if(registerForm.get('credentials.password')?.errors?.['pattern']) {
                                     <div>La contraseña debe incluir:</div>
                                     <ul class="list-disc ml-5">
-                                        <li *ngIf="needsLowercase">Una letra minúscula</li>
-                                        <li *ngIf="needsUppercase">Una letra mayúscula</li>
-                                        <li *ngIf="needsNumber">Un número</li>
+                                        @if(needsLowercase){<li>Una letra minúscula</li>}
+                                        @if(needsUppercase){<li>Una letra mayúscula</li>}
+                                        @if(needsNumber){<li>Un número</li>}
                                     </ul>
-                                </ng-container>
+                                }
                             </div>
+                        }
                         </div>
 
                         <!-- Confirmar Contraseña -->
@@ -172,29 +190,39 @@
                                     class="w-full px-3 py-2 pr-10 border border-white/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-white/50 focus:border-white/50 transition-colors bg-black text-white"
                                     [class.border-red-500]="registerForm.get('credentials.confirmPassword')?.invalid && registerForm.get('credentials.confirmPassword')?.touched"
                                     placeholder="Confirma tu contraseña"
+                                    (copy)="false"
+                                    (paste)="false"
+                                    (cut)="false"
                                 />
                                 <button 
                                     type="button" 
                                     (click)="showConfirmPassword = !showConfirmPassword"
                                     class="absolute inset-y-0 right-0 pr-3 flex items-center text-white hover:text-gray-300"
                                 >
-                                    <svg *ngIf="!showConfirmPassword" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                @if(!showConfirmPassword) {
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
-                                    <svg *ngIf="showConfirmPassword" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                } @else {
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
                                     </svg>
+                                }
                                 </button>
                             </div>
-                            <div *ngIf="registerForm.get('credentials.confirmPassword')?.invalid && registerForm.get('credentials.confirmPassword')?.touched" 
-                                    class="mt-1 text-sm text-red-300">
-                                <span *ngIf="registerForm.get('confirmPassword')?.errors?.['required']">Confirme su contraseña</span>
+                            @if(registerForm.get('credentials.confirmPassword')?.invalid && registerForm.get('credentials.confirmPassword')?.touched){
+                            <div class="mt-1 text-sm text-red-300">
+                                @if(registerForm.get('confirmPassword')?.errors?.['required']){
+                                <span>Confirme su contraseña</span>
+                                }
                             </div>
-                            <div *ngIf="registerForm.get('credentials')?.errors?.['passwordMismatch'] && registerForm.get('credentials.confirmPassword')?.touched" 
-                                    class="mt-1 text-sm text-red-300">
+                            @if(registerForm.get('credentials')?.errors?.['passwordMismatch'] && registerForm.get('credentials.confirmPassword')?.touched){
+                            <div class="mt-1 text-sm text-red-300">
                                 Las contraseñas no coinciden
                             </div>
+                        }
+                        }
                         </div>
 
                         
@@ -226,12 +254,15 @@
         </div>
 
         <!-- Mensajes de error/éxito -->
-        <div *ngIf="errorMessage" class="mt-4 p-3 bg-red-900/50 border border-red-700 rounded-md">
+         @if(errorMessage){
+        <div class="mt-4 p-3 bg-red-900/50 border border-red-700 rounded-md">
             <p class="text-sm text-red-300">{{ errorMessage }}</p>
         </div>
-
-        <div *ngIf="successMessage" class="mt-4 p-3 bg-green-900/50 border border-green-700 rounded-md">
+    }
+         @if(successMessage){
+        <div class="mt-4 p-3 bg-green-900/50 border border-green-700 rounded-md">
             <p class="text-sm text-green-300">{{ successMessage }}</p>
         </div>
+    }
     </div>
 </div>
