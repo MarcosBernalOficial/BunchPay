@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { TransactionService } from '../../services/transaction.service';
 import { Transaction, TransactionType } from '../../models/transaction.interface';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 
 @Component({
   selector: 'app-transactions-history',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, PageHeaderComponent],
   templateUrl: './transactions-history.component.html',
   styleUrls: ['./transactions-history.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush

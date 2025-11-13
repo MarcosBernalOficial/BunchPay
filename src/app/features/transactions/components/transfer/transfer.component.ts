@@ -4,11 +4,12 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { TransactionService } from '../../../transactions/services/transaction.service';
 import { getErrorMessage } from '../../../../shared/utils/error-handler';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 
 @Component({
   selector: 'app-transfer',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, PageHeaderComponent],
   templateUrl: './transfer.component.html',
   styleUrls: ['./transfer.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush

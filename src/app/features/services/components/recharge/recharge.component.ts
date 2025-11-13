@@ -5,11 +5,12 @@ import { RouterModule, ActivatedRoute } from '@angular/router';
 import { ServicesApiService } from '../../services/services-api.service';
 import { RechargeRequest } from '../../models/service.interface';
 import { getErrorMessage } from '../../../../shared/utils/error-handler';
+import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 
 @Component({
   selector: 'app-recharge',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, PageHeaderComponent],
   templateUrl: './recharge.component.html',
   styleUrls: ['./recharge.component.css']
 })

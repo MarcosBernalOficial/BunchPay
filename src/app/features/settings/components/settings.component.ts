@@ -6,10 +6,11 @@ import { Router, RouterModule } from '@angular/router';
 import { AccountService } from '../../account/services/account.service';
 import { AuthService } from '../../auth/services/auth.service';
 import { ClientProfile } from '../../account/models/account.interface';
+import { PageHeaderComponent, NavLink } from '../../../shared/components/page-header/page-header.component';
 
 @Component({
   selector: 'app-settings',
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, PageHeaderComponent],
   templateUrl: './settings.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -19,6 +20,12 @@ export class SettingsComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+
+  navLinks: NavLink[] = [
+    { label: 'Home', route: '/dashboard' },
+    { label: 'Crypto', route: '/crypto' },
+    { label: 'Configuración', route: '/settings' }
+  ];
 
   loadingProfile = false;
   savingProfile = false;

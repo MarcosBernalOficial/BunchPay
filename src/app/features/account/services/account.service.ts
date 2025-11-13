@@ -32,7 +32,7 @@ export class AccountService {
      * Cambiar alias de la cuenta
      */
     async changeAlias(aliasData: AliasChange): Promise<string> {
-        return await firstValueFrom(this.http.patch<string>(`${this.API_URL}/accountClient/alias`, aliasData));
+        return await firstValueFrom(this.http.patch(`${this.API_URL}/accountClient/alias`, aliasData, { responseType: 'text' }));
     }
 
     /**

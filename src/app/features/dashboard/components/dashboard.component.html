@@ -1,29 +1,13 @@
 <div class="min-h-screen bg-black text-white">
   <!-- Header -->
-  <header class="border-b border-white/10">
-    <div class="max-w-6xl mx-auto px-4 py-5">
-      <h1 class="text-2xl font-bold tracking-wide">BunchPay</h1>
-    </div>
-    <!-- Navbar -->
-    <nav class="bg-white/10">
-      <div class="max-w-6xl mx-auto px-2">
-        <ul class="flex gap-2 text-md">
-          <li><a routerLink="/transactions" class="block px-4 py-3 hover:bg-white hover:text-black hover:rounded-lg  transition-all duration-300">Transacciones</a></li>
-          <li><a routerLink="/benefits" class="block px-4 py-3 hover:bg-white hover:text-black hover:rounded-lg transition-all duration-300">Beneficios</a></li>
-          <li><a routerLink="/dashboard" routerLinkActive="bg-white text-black" class="block px-4 py-3 font-medium hover:bg-white hover:text-black hover:rounded-lg transition-all duration-300">Home</a></li>
-          <li><a routerLink="/crypto" class="block px-4 py-3 hover:bg-white hover:text-black hover:rounded-lg transition-all duration-300">Crypto</a></li>
-          <li class="ml-auto"><a routerLink="/settings" class="block px-4 py-3 border-l border-r border-white hover:bg-white hover:text-black hover:rounded-lg transition-all duration-300">Configuración</a></li>
-        </ul>
-      </div>
-    </nav>
-  </header>
+  <app-page-header [showLogo]="true" [navLinks]="navLinks"></app-page-header>
 
   <!-- Main -->
   <main class="max-w-6xl mx-auto px-4 py-6 space-y-8">
 
     <!-- Resumen de cuenta -->
     <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="md:col-span-2 border border-white/10 rounded-xl p-5 bg-white/5 flex flex-col justify-center">
+      <div class="md:col-span-2 border border-white/25 rounded-xl p-5 bg-black flex flex-col justify-center">
         <div class="flex items-center justify-center">
           <div class="text-center flex flex-col items-center justify-center">
             <p class="text-sm text-white/70 flex items-center gap-2">Saldo actual
@@ -54,19 +38,101 @@
         </div>
       </div>
 
-      <div class="border border-white/10 rounded-xl p-5 bg-white/5">
-        <p class="text-sm text-white/70">Información de la cuenta</p>
+      <div class="border border-white rounded-xl p-5 bg-white text-black">
+        <p class="text-md text-center text-black">Información de la cuenta</p>
         <div class="mt-3 space-y-2 text-sm">
           @if (accountSummary()) {
-            <div class="text-xs text-white/60">Alias</div>
-            <div class="font-mono break-all">{{ accountSummary()!.alias }}</div>
-            <div class="mt-2 text-xs text-white/60">CVU</div>
-            <div class="font-mono text-xs break-all">{{ accountSummary()!.cvu }}</div>
+            <div class="text-xs text-black border-b border-black">Alias</div>
+            @if (editingAlias()) {
+              <div class="space-y-2">
+                <input
+                  type="text"
+                  [value]="newAlias()"
+                  (input)="newAlias.set($any($event.target).value); aliasError.set(null)"
+                  class="w-full px-3 py-2 border border-black rounded text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  placeholder="Ingresá tu nuevo alias"
+                  [disabled]="aliasLoading()"
+                  maxlength="20"
+                />
+                @if (aliasError()) {
+                  <div class="text-xs text-red-600">{{ aliasError() }}</div>
+                }
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    (click)="saveAlias()"
+                    [disabled]="aliasLoading()"
+                    class="flex-1 px-3 py-1.5 bg-black text-white text-xs rounded hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    @if (aliasLoading()) { Guardando... } @else { Guardar }
+                  </button>
+                  <button
+                    type="button"
+                    (click)="cancelEditingAlias()"
+                    [disabled]="aliasLoading()"
+                    class="flex-1 px-3 py-1.5 border border-black text-black text-xs rounded hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <div class="flex items-center gap-2">
+                <div class="font-mono break-all flex-1">{{ accountSummary()!.alias }}</div>
+                <button
+                  type="button"
+                  (click)="startEditingAlias()"
+                  class="px-2 py-1 text-xs border border-black rounded hover:bg-black hover:text-white transition shrink-0">
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  (click)="copyAlias()"
+                  class="p-1.5 hover:bg-gray-100 rounded transition group relative shrink-0"
+                  [class.text-green-600]="copiedAlias()">
+                  @if (copiedAlias()) {
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  }
+                  <span class="absolute -top-8 right-0 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                    {{ copiedAlias() ? '¡Copiado!' : 'Copiar alias' }}
+                  </span>
+                </button>
+              </div>
+            }
+            @if (aliasSuccess()) {
+              <div class="text-xs text-green-600 font-medium">{{ aliasSuccess() }}</div>
+            }
+            <div class="mt-2 text-xs text-black border-b border-black">CVU</div>
+            <div class="flex items-center gap-2">
+              <div class="font-mono text-xs break-all flex-1">{{ accountSummary()!.cvu }}</div>
+              <button
+                type="button"
+                (click)="copyCvu()"
+                class="p-1.5 hover:bg-gray-100 rounded transition group relative shrink-0"
+                [class.text-green-600]="copiedCvu()">
+                @if (copiedCvu()) {
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                }
+                <span class="absolute -top-8 right-0 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                  {{ copiedCvu() ? '¡Copiado!' : 'Copiar CVU' }}
+                </span>
+              </button>
+            </div>
           } @else {
-            <div class="text-white/60 text-xs">Cargando datos de cuenta…</div>
+            <div class="text-black text-xs">Cargando datos de cuenta…</div>
           }
 
-          <a routerLink="/account/card" class="inline-block mt-3 px-3 py-2 w-full text-center rounded bg-white text-black hover:bg-white/15 hover:text-white transition-colors duration-300">Tarjetas</a>
+          <a routerLink="/account/card" class="inline-block mt-3 px-3 py-2 w-full text-center border border-black rounded bg-black text-white hover:bg-white hover:text-black transition-colors duration-300">Tarjetas</a>
         </div>
       </div>
     </section>
@@ -75,9 +141,9 @@
     <section class="space-y-3">
       <div class="flex items-center gap-2">
         <h3 class="text-lg font-semibold">Últimos movimientos</h3>
-        <a routerLink="/transactions/history" class="ml-auto text-sm text-white/70 hover:text-white">Ver todos</a>
+        <a routerLink="/transactions/history" class="ml-auto text-sm text-white hover:underline">Ver todos</a>
       </div>
-      <div class="border border-white/10 rounded-xl divide-y divide-white/10 overflow-hidden">
+      <div class="border border-white/25 rounded-xl divide-y divide-white/25 overflow-hidden">
         @if (recentTransactions().length) {
           @for (tx of recentTransactions(); track tx.transactionId) {
           <div class="flex items-center gap-3 px-4 py-3">
@@ -107,15 +173,15 @@
     <section class="space-y-3">
       <h3 class="text-lg font-semibold">Servicios</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <a [routerLink]="['/services/recharge']" [queryParams]="{type: 'sube'}" class="block border border-white/10 rounded-xl p-4 bg-white/5 hover:bg-white/10 transition">
+        <a [routerLink]="['/services/recharge']" [queryParams]="{type: 'sube'}" class="block border border-white/25 rounded-xl p-4 bg-black hover:scale-105 transition duration-300">
           <div class="font-semibold">Cargar SUBE</div>
           <div class="text-sm text-white/70">Acreditá saldo a tu tarjeta SUBE</div>
         </a>
-        <a [routerLink]="['/services/recharge']" [queryParams]="{type: 'celular'}" class="block border border-white/10 rounded-xl p-4 bg-white/5 hover:bg-white/10 transition">
+        <a [routerLink]="['/services/recharge']" [queryParams]="{type: 'celular'}" class="block border border-white/25 rounded-xl p-4 bg-black hover:scale-105 transition duration-300">
           <div class="font-semibold">Recarga de celular</div>
           <div class="text-sm text-white/70">Recargá tu línea prepaga</div>
         </a>
-        <a [routerLink]="['/services/recharge']" [queryParams]="{type: 'steam'}" class="block border border-white/10 rounded-xl p-4 bg-white/5 hover:bg-white/10 transition">
+        <a [routerLink]="['/services/recharge']" [queryParams]="{type: 'steam'}" class="block border border-white/25 rounded-xl p-4 bg-black hover:scale-105 transition duration-300">
           <div class="font-semibold">Steam</div>
           <div class="text-sm text-white/70">Recargá tu billetera de Steam</div>
         </a>
@@ -135,11 +201,30 @@
             <div class="text-sm text-white/70">No hay beneficios activos por el momento.</div>
           } @else {
             @for (c of coupons(); track c.code) {
-              <div class="border border-white/10 rounded-xl p-4 bg-white/5">
-                <div class="font-semibold">{{ c.discountPercent }}% OFF</div>
-                <div class="text-sm text-white/70">en {{ c.company }}</div>
-                <div class="text-xs text-white/50 mt-1">Código: {{ c.code }}</div>
-                <div class="text-xs text-white/50">Vence: {{ c.expirationDate | date:'dd/MM/yyyy' }}</div>
+              <div class="rounded-xl p-4 bg-white text-black hover:scale-105 transition-transform duration-300">
+                <div class="font-semibold border-r-2 text-end border-black px-2">{{ c.discountPercent }}% OFF</div>
+                <div class="text-sm text-center">{{ c.company }}</div>
+                <button
+                  type="button"
+                  (click)="copyCouponCode(c.code)"
+                  class="w-full text-sm my-1 bg-black text-white text-center py-1 px-3 rounded-full border border-black hover:bg-white hover:text-black transition-colors duration-300 relative group"
+                  [class.bg-green-600]="copiedCode() === c.code"
+                  [class.border-green-600]="copiedCode() === c.code">
+                  @if (copiedCode() === c.code) {
+                    <span class="flex items-center justify-center gap-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      ¡Copiado!
+                    </span>
+                  } @else {
+                    Código: {{ c.code }}
+                  }
+                  <span class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    Copiar código
+                  </span>
+                </button>
+                <div class="text-xs text-center">Vence: {{ c.expirationDate | date:'dd/MM/yyyy' }}</div>
               </div>
             }
           }

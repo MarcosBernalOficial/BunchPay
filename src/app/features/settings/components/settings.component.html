@@ -1,22 +1,6 @@
 <div class="min-h-screen bg-black text-white">
     <!-- Header -->
-    <header class="border-b border-white/10">
-        <div class="max-w-6xl mx-auto px-4 py-5">
-        <h1 class="text-2xl font-bold tracking-wide">BunchPay</h1>
-        </div>
-        <!-- Navbar -->
-        <nav class="bg-white/10">
-            <div class="max-w-6xl mx-auto px-2">
-            <ul class="flex gap-2 text-md">
-                <li><a routerLink="/transactions" class="block px-4 py-3 hover:bg-white hover:text-black hover:rounded-lg  transition-all duration-300">Transacciones</a></li>
-                <li><a routerLink="/benefits" class="block px-4 py-3 hover:bg-white hover:text-black hover:rounded-lg transition-all duration-300">Beneficios</a></li>
-                <li><a routerLink="/dashboard" class="block px-4 py-3 font-medium hover:bg-white hover:text-black hover:rounded-lg transition-all duration-300">Home</a></li>
-                <li><a routerLink="/crypto" class="block px-4 py-3 hover:bg-white hover:text-black hover:rounded-lg transition-all duration-300">Crypto</a></li>
-                <li class="ml-auto"><a routerLink="/settings" routerLinkActive="bg-white text-black" class="block px-4 py-3 border-l border-r border-white hover:bg-white hover:text-black hover:rounded-lg transition-all duration-300">Configuración</a></li>
-            </ul>
-            </div>
-        </nav>
-    </header>
+    <app-page-header [showLogo]="true" [navLinks]="navLinks"></app-page-header>
 
     <!-- Main -->
     <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
