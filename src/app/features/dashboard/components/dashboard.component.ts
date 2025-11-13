@@ -31,13 +31,11 @@ export class DashboardComponent implements OnInit {
   ];
 
   user = this.authService.getCurrentUser();
-  Role = Role; // expose enum to template
+  Role = Role;
 
-  // Datos con señales
   accountSummary = this.accountService.accountSummary;
   recentTransactions = computed(() => {
     const list = this.transactionService.transactions() || [];
-    // de-duplicate by id when possible, else by stable composite key
     const seenIds = new Set<number>();
     const seenKeys = new Set<string>();
     const uniq: Transaction[] = [];
@@ -67,7 +65,6 @@ export class DashboardComponent implements OnInit {
   couponsLoading = this.discountCouponService.loading;
   couponsError = this.discountCouponService.error;
 
-  // UI state
   showBalance = signal<boolean>(true);
   copiedCode = signal<string | null>(null);
   copiedAlias = signal<boolean>(false);

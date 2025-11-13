@@ -4,7 +4,7 @@ export interface LoginResponse {
     nombre: string;
     apellido: string;
     rol: Role;
-    dni?: string; // Solo para clientes
+    dni?: string;
 }
 
 export enum Role {

@@ -10,9 +10,7 @@ export class ServicesService {
     private readonly API_URL = 'http://localhost:8080/api/recharge';
     private http = inject(HttpClient);
 
-    /**
-   * Realizar recarga de servicio
-   */
+    /* Realizar recarga de servicio */
     async processRecharge(rechargeData: RechargeRequest): Promise<string> {
         return await firstValueFrom(this.http.post<string>(`${this.API_URL}/service`, rechargeData));
     }

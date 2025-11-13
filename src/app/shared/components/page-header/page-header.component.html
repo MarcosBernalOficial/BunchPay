@@ -1,41 +1,39 @@
 <header class="">
-  @if (showLogo) {
-    <!-- Header con logo y navbar (dashboard/settings) -->
-    <div class="max-w-6xl mx-auto px-4 py-5">
-      <h1 class="text-2xl font-bold tracking-wide">BunchPay</h1>
-    </div>
-    <nav class="bg-black border-t border-white/25 pb-2">
-      <div class="max-w-6xl mx-auto px-2">
-        <ul class="flex gap-2 text-md">
-          @for (link of navLinks; track link.route) {
-            <li [class.ml-auto]="link.label === 'Configuración'">
-              <a 
-                [routerLink]="link.route" 
-                routerLinkActive="bg-white text-black" 
-                class="block px-4 py-3 font-medium rounded-b-lg hover:bg-white hover:text-black hover:rounded-lg hover:mt-2 transition-all duration-300">
-                {{ link.label }}
-              </a>
-            </li>
-          }
-        </ul>
-      </div>
-    </nav>
-  } @else {
-    <!-- Header simple con botón volver (otras páginas) -->
-    <div class="border-b border-white/10">
-      <div class="max-w-3xl mx-auto px-4 py-5 flex items-center justify-between gap-3">
-        @if (showBackButton) {
-          <a 
-            [routerLink]="backRoute" 
-            class="text-white border border-white px-3 py-1 hover:text-black hover:bg-white hover:rounded transition-all duration-300">
-            Volver
-          </a>
-        } @else {
-          <span></span>
-        }
-        <h1 class="text-xl font-semibold">{{ title }}</h1>
-        <span></span>
-      </div>
-    </div>
-  }
+    @if (showLogo) {
+        <div class="max-w-6xl mx-auto px-4 py-5">
+            <h1 class="text-2xl font-bold tracking-wide">BunchPay</h1>
+        </div>
+        <nav class="bg-black border-t border-white/25 pb-2">
+            <div class="max-w-6xl mx-auto px-2">
+                <ul class="flex gap-2 text-md">
+                @for (link of navLinks; track link.route) {
+                    <li [class.ml-auto]="link.label === 'Configuración'">
+                        <a 
+                            [routerLink]="link.route" 
+                            routerLinkActive="bg-white text-black" 
+                            class="block px-4 py-3 font-medium rounded-b-lg hover:bg-white hover:text-black hover:rounded-lg hover:mt-2 transition-all duration-300">
+                            {{ link.label }}
+                        </a>
+                    </li>
+                }
+                </ul>
+            </div>
+        </nav>
+    } @else {
+        <div class="border-b border-white/10">
+            <div class="max-w-3xl mx-auto px-4 py-5 flex items-center justify-between gap-3">
+                @if (showBackButton) {
+                    <a 
+                        [routerLink]="backRoute" 
+                        class="text-white border border-white px-3 py-1 hover:text-black hover:bg-white hover:rounded transition-all duration-300">
+                        Volver
+                    </a>
+                } @else {
+                    <span></span>
+                }
+                <h1 class="text-xl font-semibold">{{ title }}</h1>
+                <span></span>
+            </div>
+        </div>
+    }
 </header>

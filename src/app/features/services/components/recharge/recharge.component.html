@@ -1,86 +1,86 @@
 <div class="min-h-screen bg-black text-white">
-  <app-page-header title="Recarga" [showBackButton]="true" backRoute="/dashboard"></app-page-header>
+    <app-page-header title="Recarga" [showBackButton]="true" backRoute="/dashboard"></app-page-header>
 
-  <main class="max-w-3xl mx-auto px-4 py-6">
-    @if (success()) {
-      <div class="mb-4 p-3 bg-green-900/50 border border-green-700 rounded-md text-green-300">
-        {{ success() }}
-      </div>
-    }
+    <main class="max-w-3xl mx-auto px-4 py-6">
+        @if (success()) {
+        <div class="mb-4 p-3 bg-green-900/50 border border-green-700 rounded-md text-green-300">
+            {{ success() }}
+        </div>
+        }
 
-    @if (error()) {
-      <div class="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-md text-red-300">
-        {{ error() }}
-      </div>
-    }
+        @if (error()) {
+        <div class="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-md text-red-300">
+            {{ error() }}
+        </div>
+        }
 
-    <div class="border border-white/10 rounded-xl p-6 space-y-6">
-      <div>
-        <h2 class="text-lg font-semibold mb-2">
-          @switch (rechargeType()) {
-            @case ('sube') { Cargar SUBE }
-            @case ('celular') { Recarga de celular }
-            @case ('steam') { Recarga Steam }
-            @default { Otras recargas }
-          }
-        </h2>
-        <p class="text-sm text-white/70">
-          @switch (rechargeType()) {
-            @case ('sube') { Acreditá saldo a tu tarjeta SUBE }
-            @case ('celular') { Recargá tu línea prepaga }
-            @case ('steam') { Agregá fondos a tu billetera de Steam }
-            @default { Realizá recargas de otros servicios }
-          }
-        </p>
-      </div>
-
-      <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+        <div class="border border-white/10 rounded-xl p-6 space-y-6">
         <div>
-          <label class="block text-sm text-white/70 mb-1">{{ identifierLabel }}</label>
-          <input 
-            type="text" 
-            formControlName="destination" 
-            [placeholder]="identifierPlaceholder"
-            [maxlength]="rechargeType() === 'sube' ? 19 : 100"
-            (input)="rechargeType() === 'sube' ? formatSubeCard($event) : null"
-            class="w-full rounded-md bg-white/5 border border-white/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/30"
-            [class.border-red-500]="form.get('destination')?.invalid && form.get('destination')?.touched"
-          />
-          @if (destinationError) {
-            <div class="text-xs text-red-400 mt-1">{{ destinationError }}</div>
-          }
+            <h2 class="text-lg font-semibold mb-2">
+            @switch (rechargeType()) {
+                @case ('sube') { Cargar SUBE }
+                @case ('celular') { Recarga de celular }
+                @case ('steam') { Recarga Steam }
+                @default { Otras recargas }
+            }
+            </h2>
+            <p class="text-sm text-white/70">
+            @switch (rechargeType()) {
+                @case ('sube') { Acreditá saldo a tu tarjeta SUBE }
+                @case ('celular') { Recargá tu línea prepaga }
+                @case ('steam') { Agregá fondos a tu billetera de Steam }
+                @default { Realizá recargas de otros servicios }
+            }
+            </p>
         </div>
 
-        <div>
-          <label class="block text-sm text-white/70 mb-1">Monto</label>
-          <input 
-            type="number" 
-            formControlName="amount" 
-            placeholder="0.00"
-            min="1"
-            step="0.01"
-            class="w-full rounded-md bg-white/5 border border-white/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/30"
-            [class.border-red-500]="form.get('amount')?.invalid && form.get('amount')?.touched"
-          />
-          @if (form.get('amount')?.invalid && form.get('amount')?.touched) {
-            <div class="text-xs text-red-400 mt-1">
-              @if (form.get('amount')?.errors?.['required']) {
-                <span>El monto es requerido</span>
-              }
-              @if (form.get('amount')?.errors?.['min']) {
-                <span>El monto debe ser mayor a 0</span>
-              }
+        <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+            <div>
+            <label class="block text-sm text-white/70 mb-1">{{ identifierLabel }}</label>
+            <input 
+                type="text" 
+                formControlName="destination" 
+                [placeholder]="identifierPlaceholder"
+                [maxlength]="rechargeType() === 'sube' ? 19 : 100"
+                (input)="rechargeType() === 'sube' ? formatSubeCard($event) : null"
+                class="w-full rounded-md bg-white/5 border border-white/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/30"
+                [class.border-red-500]="form.get('destination')?.invalid && form.get('destination')?.touched"
+            />
+            @if (destinationError) {
+                <div class="text-xs text-red-400 mt-1">{{ destinationError }}</div>
+            }
             </div>
-          }
-        </div>
 
-        <button 
-          type="submit" 
-          [disabled]="form.invalid || loading()"
-          class="w-full px-4 py-2 bg-white text-black rounded hover:bg-white/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-          {{ loading() ? 'Procesando...' : 'Realizar recarga' }}
-        </button>
-      </form>
-    </div>
-  </main>
+            <div>
+            <label class="block text-sm text-white/70 mb-1">Monto</label>
+            <input 
+                type="number" 
+                formControlName="amount" 
+                placeholder="0.00"
+                min="1"
+                step="0.01"
+                class="w-full rounded-md bg-white/5 border border-white/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/30"
+                [class.border-red-500]="form.get('amount')?.invalid && form.get('amount')?.touched"
+            />
+            @if (form.get('amount')?.invalid && form.get('amount')?.touched) {
+                <div class="text-xs text-red-400 mt-1">
+                @if (form.get('amount')?.errors?.['required']) {
+                    <span>El monto es requerido</span>
+                }
+                @if (form.get('amount')?.errors?.['min']) {
+                    <span>El monto debe ser mayor a 0</span>
+                }
+                </div>
+            }
+            </div>
+
+            <button 
+            type="submit" 
+            [disabled]="form.invalid || loading()"
+            class="w-full px-4 py-2 bg-white text-black rounded hover:bg-white/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ loading() ? 'Procesando...' : 'Realizar recarga' }}
+            </button>
+        </form>
+        </div>
+    </main>
 </div>

@@ -1,16 +1,12 @@
-/* Estilos específicos del componente Login */
-
 .login-container {
     min-height: 100vh;
 }
 
-/* Animaciones personalizadas */
 .form-input:focus {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Estados de loading */
 .loading-spinner {
     animation: spin 1s linear infinite;
 }
@@ -20,7 +16,6 @@
     to { transform: rotate(360deg); }
 }
 
-/* Responsive design mejoras */
 @media (max-width: 640px) {
     .card {
         margin: 1rem;

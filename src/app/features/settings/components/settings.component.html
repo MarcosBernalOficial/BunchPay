@@ -8,8 +8,8 @@
                         <!-- Mensaje global -->
                         @if (message) {
                             <div class="p-3 rounded border flex items-center gap-2"
-                                 [class.border-green-400]="message.type==='success'"
-                                 [class.border-red-400]="message.type==='error'">
+                                    [class.border-green-400]="message.type==='success'"
+                                    [class.border-red-400]="message.type==='error'">
                                 @if (message.type==='success') { <span class="text-green-400">✔</span> }
                                 @if (message.type==='error') { <span class="text-red-400">⚠</span> }
                                 <span>{{ message.text }}</span>
@@ -24,22 +24,22 @@
             <label class="block text-sm text-white/70 mb-1">Nombre</label>
             <input type="text" formControlName="firstName" class="w-full bg-transparent border border-white/20 rounded px-3 py-2 outline-none" />
             @if (profileForm.get('firstName')?.invalid && profileForm.get('firstName')?.touched) {
-              <div class="text-red-400 text-xs mt-1 space-y-1">
-                @if (profileForm.get('firstName')?.errors?.['required']) { <div>El nombre es requerido</div> }
-                @if (profileForm.get('firstName')?.errors?.['minlength']) { <div>Mínimo 2 caracteres</div> }
-                @if (profileForm.get('firstName')?.errors?.['pattern']) { <div>Solo se permiten letras, sin espacios ni números</div> }
-              </div>
+                <div class="text-red-400 text-xs mt-1 space-y-1">
+                    @if (profileForm.get('firstName')?.errors?.['required']) { <div>El nombre es requerido</div> }
+                    @if (profileForm.get('firstName')?.errors?.['minlength']) { <div>Mínimo 2 caracteres</div> }
+                    @if (profileForm.get('firstName')?.errors?.['pattern']) { <div>Solo se permiten letras, sin espacios ni números</div> }
+                </div>
             }
             </div>
             <div>
             <label class="block text-sm text-white/70 mb-1">Apellido</label>
             <input type="text" formControlName="lastName" class="w-full bg-transparent border border-white/20 rounded px-3 py-2 outline-none" />
             @if (profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched) {
-              <div class="text-red-400 text-xs mt-1 space-y-1">
-                @if (profileForm.get('lastName')?.errors?.['required']) { <div>El apellido es requerido</div> }
-                @if (profileForm.get('lastName')?.errors?.['minlength']) { <div>Mínimo 2 caracteres</div> }
-                @if (profileForm.get('lastName')?.errors?.['pattern']) { <div>Solo se permiten letras, sin espacios ni números</div> }
-              </div>
+                <div class="text-red-400 text-xs mt-1 space-y-1">
+                    @if (profileForm.get('lastName')?.errors?.['required']) { <div>El apellido es requerido</div> }
+                    @if (profileForm.get('lastName')?.errors?.['minlength']) { <div>Mínimo 2 caracteres</div> }
+                    @if (profileForm.get('lastName')?.errors?.['pattern']) { <div>Solo se permiten letras, sin espacios ni números</div> }
+                </div>
             }
             </div>
             <div>
@@ -102,20 +102,20 @@
                                             </button>
                         </div>
                         @if (passwordForm.get('newPassword')?.touched) {
-                          <div class="text-red-400 text-xs mt-1 space-y-1">
-                            @if (passwordForm.get('newPassword')?.errors?.['required']) { <div>Requerida</div> }
-                            @if (passwordForm.get('newPassword')?.errors?.['minlength']) { <div>Mínimo 8 caracteres</div> }
-                            @if (newPasswordPatternError) {
-                              <div>Debe incluir al menos:</div>
-                              <ul class="list-disc ml-5">
-                                @if (newPasswordNeedsLowercase) { <li>Una minúscula</li> }
-                                @if (newPasswordNeedsUppercase) { <li>Una mayúscula</li> }
-                                @if (newPasswordNeedsNumber) { <li>Un número</li> }
-                              </ul>
-                            }
-                          </div>
+                            <div class="text-red-400 text-xs mt-1 space-y-1">
+                                @if (passwordForm.get('newPassword')?.errors?.['required']) { <div>Requerida</div> }
+                                @if (passwordForm.get('newPassword')?.errors?.['minlength']) { <div>Mínimo 8 caracteres</div> }
+                                @if (newPasswordPatternError) {
+                                <div>Debe incluir al menos:</div>
+                                    <ul class="list-disc ml-5">
+                                        @if (newPasswordNeedsLowercase) { <li>Una minúscula</li> }
+                                        @if (newPasswordNeedsUppercase) { <li>Una mayúscula</li> }
+                                        @if (newPasswordNeedsNumber) { <li>Un número</li> }
+                                    </ul>
+                                }
+                            </div>
                         } @else {
-                          <p class="text-xs text-white/60 mt-1">Mínimo 8 caracteres, con minúscula, mayúscula y número.</p>
+                            <p class="text-xs text-white/60 mt-1">Mínimo 8 caracteres, con minúscula, mayúscula y número.</p>
                         }
                         </div>
             <div class="md:col-span-2 mt-2">

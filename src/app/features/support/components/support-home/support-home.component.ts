@@ -10,7 +10,6 @@ import { Router } from '@angular/router';
   selector: 'app-support-home',
   imports: [CommonModule, FormsModule],
   templateUrl: './support-home.component.html',
-  styleUrls: ['./support-home.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SupportHomeComponent implements OnInit, OnDestroy {

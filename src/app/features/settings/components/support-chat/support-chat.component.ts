@@ -38,7 +38,6 @@ export class SupportChatComponent implements OnInit, OnDestroy {
   async ngOnInit() {
     this.loading = true;
     try {
-      // No bloquear la UI si el WS tarda o falla: timeout de 1500ms
       await Promise.race([
         this.ws.connect().catch(() => {}),
         new Promise<void>(res => setTimeout(res, 1500))
@@ -55,16 +54,12 @@ export class SupportChatComponent implements OnInit, OnDestroy {
       this.messages = history;
 
       this.ws.subscribeToChat(this.chat.id).subscribe(event => {
-        // event puede ser un mensaje o un objeto con contenido
         const msg: ClientChatMessage = typeof event === 'string' ? { id: Date.now(), content: event, date: new Date().toISOString(), sender: { email: 'system', role: 'SYSTEM' } } as any : event;
         this.messages = [...this.messages, msg];
-        // scroll al final lo maneja la vista si agregamos autoscroll
         this.cdr.markForCheck();
       });
 
-      // Suscribirse a eventos de cierre de chat
       this.ws.subscribeToTopic(`/topic/chats/${this.chat.id}/closed`).subscribe(async () => {
-        // El support cerró el chat
         await this.handleChatClosed();
       });
     } finally {
@@ -80,25 +75,20 @@ export class SupportChatComponent implements OnInit, OnDestroy {
   private async handleChatClosed(): Promise<void> {
     if (!this.chat) return;
 
-    // Desconectar del chat cerrado
     this.ws.unsubscribeFromChat(this.chat.id);
     this.ws.unsubscribeFromTopic(`/topic/chats/${this.chat.id}/closed`);
 
-    // Limpiar mensajes
     this.messages = [];
     this.chat = null;
     this.cdr.markForCheck();
 
-    // Crear nuevo chat automáticamente
     try {
       const newChat = await this.clientChat.startChat();
       this.chat = newChat;
 
-      // Cargar mensajes del nuevo chat (debería estar vacío)
       const history = await this.clientChat.getMessages(newChat.id);
       this.messages = history;
 
-      // Agregar mensaje informativo del sistema
       const systemMessage: ClientChatMessage = {
         id: Date.now(),
         content: 'El soporte ha cerrado el chat anterior. Esta es una nueva conversación.',
@@ -109,14 +99,12 @@ export class SupportChatComponent implements OnInit, OnDestroy {
       };
       this.messages = [...this.messages, systemMessage];
 
-      // Suscribirse al nuevo chat
       this.ws.subscribeToChat(newChat.id).subscribe(event => {
         const msg: ClientChatMessage = typeof event === 'string' ? { id: Date.now(), content: event, date: new Date().toISOString(), sender: { email: 'system', role: 'SYSTEM' } } as any : event;
         this.messages = [...this.messages, msg];
         this.cdr.markForCheck();
       });
 
-      // Suscribirse a eventos de cierre del nuevo chat
       this.ws.subscribeToTopic(`/topic/chats/${newChat.id}/closed`).subscribe(async () => {
         await this.handleChatClosed();
       });
@@ -149,13 +137,10 @@ export class SupportChatComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Determina si el mensaje es del cliente (yo) para alinear a la derecha
   isMine(m: any): boolean {
-    // REST (ClientChatController): MessageDto => senderType
     if (m && typeof m.senderType === 'string') {
       return m.senderType === 'CLIENT';
     }
-    // WS (ChatWsController): payload => senderRole
     if (m && typeof m.senderRole === 'string') {
       return m.senderRole === 'CLIENT';
     }

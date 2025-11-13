@@ -10,14 +10,11 @@ import { LoginResponse } from '../models/auth-response.interface';
 })
 export class AuthService {
     private readonly API_URL = 'http://localhost:8080/auth';
-    // Estado con señales
     private _currentUser = signal<LoginResponse | null>(null);
-    currentUser = this._currentUser; // expuesto como lectura en componentes si se necesita
+    currentUser = this._currentUser;
     private http = inject(HttpClient);
 
     constructor() {
-        // Preferir sessionStorage (sesión por pestaña) para permitir múltiples sesiones en distintas pestañas
-        // Migración suave: si no hay en sessionStorage pero sí en localStorage, copiarlo
         const ssUser = sessionStorage.getItem('currentUser');
         if (ssUser) {
             this._currentUser.set(JSON.parse(ssUser));
@@ -32,9 +29,7 @@ export class AuthService {
         }
     }
 
-    /**
-     * Registrar nuevo usuario
-     */
+    /* Registrar nuevo usuario */
     async register(userData: RegisterUser): Promise<void> {
         try {
             await firstValueFrom(this.http.post(`${this.API_URL}/register`, userData));
@@ -47,9 +42,7 @@ export class AuthService {
         }
     }
 
-    /**
-     * Iniciar sesión
-     */
+    /* Iniciar sesión */
     async login(credentials: LoginUser): Promise<LoginResponse> {
         const response = await firstValueFrom(
             this.http.post<LoginResponse>(`${this.API_URL}/login`, credentials).pipe(
@@ -63,9 +56,7 @@ export class AuthService {
         return response;
     }
 
-    /**
-     * Cerrar sesión
-     */
+    /* Cerrar sesión */
     async logout(): Promise<void> {
         await firstValueFrom(this.http.post(`${this.API_URL}/logout`, {}));
         // Limpiar sessionStorage y localStorage (por si quedó residuo)
@@ -77,30 +68,22 @@ export class AuthService {
         this._currentUser.set(null);
     }
 
-    /**
-     * Verificar si el usuario está autenticado
-     */
+    /* Verificar si el usuario está autenticado */
     isAuthenticated(): boolean {
         return !!this.getToken();
     }
 
-    /**
-     * Obtener token
-     */
+    /* Obtener token */
     getToken(): string | null {
         return sessionStorage.getItem('token') || null;
     }
 
-    /**
-     * Obtener usuario actual
-     */
+    /* Obtener usuario actual */
     getCurrentUser(): LoginResponse | null {
         return this._currentUser();
     }
 
-    /**
-     * Verificar si el usuario tiene un rol específico
-     */
+    /* Verificar si el usuario tiene un rol específico */
     hasRole(role: string): boolean {
         const expected = this.normalizeRole(role);
         const user = this.getCurrentUser();
@@ -112,18 +95,13 @@ export class AuthService {
         return !!actual && actual === expected;
     }
 
-    /**
-     * Normaliza roles para comparación robusta: mayúsculas y sin prefijo ROLE_
-     */
+    /* Normaliza roles para comparación robusta: mayúsculas y sin prefijo ROLE_ */
     private normalizeRole(role: string | undefined | null): string | null {
         if (!role) return null;
         return String(role).toUpperCase().replace(/^ROLE_/, '').trim();
     }
 
-    /**
-     * Extrae el rol desde el JWT (payload), probando distintas convenciones
-     * Ejemplos: { rol: 'SUPPORT' } | { role: 'ROLE_SUPPORT' } | { authorities: [{ authority: 'ROLE_SUPPORT' }] }
-     */
+    /* Extrae el rol desde el JWT (payload), probando distintas convenciones */
     private getRoleFromToken(): string | null {
         const token = this.getToken();
         if (!token) return null;
@@ -144,13 +122,11 @@ export class AuthService {
     }
 
     private base64UrlDecode(input: string): string {
-        // Reemplaza URL-safe chars y agrega padding si falta
         input = input.replace(/-/g, '+').replace(/_/g, '/');
         const pad = input.length % 4;
         if (pad) {
             input += '='.repeat(4 - pad);
         }
-        // atob para decodificar base64
         return decodeURIComponent(
             Array.prototype.map
                 .call(atob(input), (c: string) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))

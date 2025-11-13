@@ -19,7 +19,6 @@ export class DiscountCouponService {
       const data = await firstValueFrom(this.http.get<DiscountCoupon[]>(`${this.API_URL}/my-active`));
       this.coupons.set(data);
       if (data.length === 0) {
-        // intentar generar si no hay
         const generated = await firstValueFrom(this.http.post<DiscountCoupon[]>(`${this.API_URL}/generate-if-empty`, {}));
         this.coupons.set(generated);
       }

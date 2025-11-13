@@ -10,7 +10,6 @@ import { markAllAsTouched } from '../../../../shared/utils/form-helpers';
   selector: 'app-admin-supports',
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './admin-supports.component.html',
-  styleUrls: ['./admin-supports.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminSupportsComponent implements OnInit {
@@ -50,13 +49,9 @@ export class AdminSupportsComponent implements OnInit {
     })
   });
 
-  // Edición (usaremos createForm para crear/editar)
   editing: SupportDto | null = null;
-
-  // toggles de visibilidad de contraseña
   showCreatePassword = false;
 
-  // Getters para mensajes dinámicos (crear)
   get createPasswordCtrl() { return this.createForm.get('credentials.password'); }
   get createPasswordValue(): string { return (this.createPasswordCtrl?.value as string) || ''; }
   get createPasswordPatternError(): boolean { return !!this.createPasswordCtrl?.errors?.['pattern']; }
@@ -118,7 +113,6 @@ export class AdminSupportsComponent implements OnInit {
         }
       })();
     } else {
-      // Editar
       this.isLoading = true;
       const payload: any = {
         firstName: personal.firstName,
@@ -150,25 +144,21 @@ export class AdminSupportsComponent implements OnInit {
       return;
     }
     this.editing = s;
-    // Deshabilitar email y rellenar datos
     const emailCtrl = this.createForm.get('credentials.email');
     emailCtrl?.disable({ emitEvent: false });
     this.createForm.patchValue({
       personal: { firstName: s.firstName, lastName: s.lastName },
       credentials: { email: s.email, password: '' }
     }, { emitEvent: false });
-    // Hacer la contraseña opcional en modo edición
     this.applyPasswordValidatorsForMode(false);
     this.cdr.markForCheck();
   }
 
   cancelEdit() {
     this.editing = null;
-    // Rehabilitar email y limpiar form
     const emailCtrl = this.createForm.get('credentials.email');
     emailCtrl?.enable({ emitEvent: false });
     this.createForm.reset();
-    // Contraseña requerida en modo creación
     this.applyPasswordValidatorsForMode(true);
     this.cdr.markForCheck();
   }

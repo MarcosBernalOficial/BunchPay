@@ -13,9 +13,8 @@ export interface ClientChatSummary {
 export interface ClientChatMessage {
   id: number;
   content: string;
-  date: string; // ISO
+  date: string; 
   sender: { email: string; role: string } | any;
-  // Compatibilidad con DTOs del backend y WS
   senderName?: string;
   senderType?: 'CLIENT' | 'SUPPORT';
   senderRole?: 'CLIENT' | 'SUPPORT';

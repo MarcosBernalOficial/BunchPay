@@ -23,18 +23,22 @@ export class AdminSupportService {
   private readonly API = 'http://localhost:8080/support';
   private http = inject(HttpClient);
 
+  /* Listar todos los soportes */
   async listAll(): Promise<SupportDto[]> {
     return await firstValueFrom(this.http.get<SupportDto[]>(`${this.API}/all`));
   }
 
+  /* Crear un nuevo soporte */
   async create(payload: CreateSupportPayload): Promise<SupportDto> {
     return await firstValueFrom(this.http.post<SupportDto>(`${this.API}/create`, payload));
   }
 
+  /* Actualizar un soporte existente */
   async update(id: number, dto: { firstName: string; lastName: string; password?: string }): Promise<SupportDto> {
     return await firstValueFrom(this.http.put<SupportDto>(`${this.API}/${id}`, dto));
   }
 
+  /* Eliminar un soporte */
   async remove(id: number): Promise<void> {
     await firstValueFrom(this.http.delete(`${this.API}/${id}`));
   }

@@ -29,7 +29,6 @@ export class ChatService {
         onConnect: () => resolve(),
   onStompError: (frame: IFrame) => reject(frame.headers['message'] || 'WS error'),
         onWebSocketClose: () => {
-          // clear subs on disconnect
           this.subscriptions.clear();
         }
       });
@@ -57,7 +56,6 @@ export class ChatService {
         throw new Error('WebSocket not connected');
       }
       const sub = this.client.subscribe(topic, (message: IMessage) => {
-        // Asegurar que el callback se ejecute dentro de Angular para disparar CD con OnPush
         this.zone.run(() => {
           try {
             const body = JSON.parse(message.body);
@@ -73,7 +71,6 @@ export class ChatService {
     return subject.asObservable();
   }
 
-  /** Subscribe to an arbitrary STOMP topic */
   subscribeToTopic(topic: string): Observable<any> {
     if (!this.subjects.has(topic)) {
       this.subjects.set(topic, new Subject<any>());
@@ -106,18 +103,15 @@ export class ChatService {
     this.client.publish({ destination, body: JSON.stringify({ content }) });
   }
 
-  /** Unsubscribe from a specific STOMP topic */
   unsubscribeFromTopic(topic: string): void {
     const sub = this.subscriptions.get(topic);
     if (sub) {
       try { sub.unsubscribe(); } catch {}
       this.subscriptions.delete(topic);
     }
-    // también limpiar subject para evitar fugas si no habrá más oyentes
     this.subjects.delete(topic);
   }
-
-  /** Unsubscribe helper for a chat topic */
+  
   unsubscribeFromChat(chatId: number): void {
     this.unsubscribeFromTopic(`/topic/chats/${chatId}`);
   }

@@ -8,8 +8,7 @@ import { PageHeaderComponent } from '../../../../shared/components/page-header/p
     selector: 'app-cards',
     standalone: true,
     imports: [CommonModule, RouterModule, PageHeaderComponent],
-    templateUrl: './cards.component.html',
-    styleUrls: ['./cards.component.css']
+    templateUrl: './cards.component.html'
 })
 export class CardsComponent implements OnInit {
     private cardService = inject(CardService);
@@ -64,11 +63,9 @@ export class CardsComponent implements OnInit {
 
     getDisplayCardNumber(): string {
         if (this.showData()) {
-            // Show full card number, format in groups of 4
             const cardNumber = this.card()?.cardNumber || '';
             return cardNumber.replace(/(.{4})/g, '$1 ').trim();
         } else {
-            // Show masked number (backend already formats it with spaces)
             return this.card()?.maskedCardNumber || '';
         }
     }

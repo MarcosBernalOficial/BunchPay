@@ -1,6 +1,6 @@
 export interface Transaction {
     transactionId: number;
-    date: string; // LocalDateTime del backend se convierte a string
+    date: string;
     amount: number;
     description: string;
     type: TransactionType;

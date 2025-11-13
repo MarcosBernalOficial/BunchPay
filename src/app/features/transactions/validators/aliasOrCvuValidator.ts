@@ -4,16 +4,16 @@ export function aliasOrCvuValidator(control: AbstractControl): ValidationErrors 
     const value = (control.value || '').trim();
 
     if(!value) {
-        return { required: true }; //Si esta vacio el campo
+        return { required: true };
     }
 
-    const cvuPattern = /^\d{22}$/; //El cvu tiene 22 digitos
-    const aliasPattern = /^[a-zA-Z0-9._]{6,}$/; //El alias son 6 caracteres minimos, letras, numeros y . o _
+    const cvuPattern = /^\d{22}$/;
+    const aliasPattern = /^[a-zA-Z0-9._]{6,}$/;
     
     if(cvuPattern.test(value) || aliasPattern.test(value)) {
-        return null; //Es valido
+        return null;
     }
 
-    return {invalidCvuOrAlias: true}; //No es valido ni el cvu ni el alias
+    return {invalidCvuOrAlias: true};
 
 }

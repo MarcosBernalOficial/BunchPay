@@ -10,7 +10,6 @@ import { PageHeaderComponent } from '../../../../shared/components/page-header/p
   standalone: true,
   imports: [CommonModule, RouterModule, PageHeaderComponent],
   templateUrl: './transactions-history.component.html',
-  styleUrls: ['./transactions-history.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TransactionsHistoryComponent implements OnInit {

@@ -62,7 +62,6 @@ export class SettingsComponent implements OnInit {
     ],
   });
 
-  // Getters para mensajes de validación de contraseña
   get newPasswordCtrl() { return this.passwordForm.get('newPassword'); }
   get newPasswordValue(): string { return (this.newPasswordCtrl?.value as string) || ''; }
   get newPasswordPatternError(): boolean { return !!this.newPasswordCtrl?.errors?.['pattern']; }
@@ -105,12 +104,10 @@ export class SettingsComponent implements OnInit {
     (async () => {
       try {
         const updated = await this.accountService.updateProfile({ firstName: firstName!, lastName: lastName! });
-        // Refrescar formulario con la respuesta del backend por si normaliza/corrige datos
         this.profileForm.patchValue({
           firstName: updated.firstName,
           lastName: updated.lastName
         });
-        // Refrescar resumen global (header, etc.) si lo usa la app
         try { await this.accountService.loadAccountSummary(); } catch {}
         this.setMessage('success', 'Perfil guardado correctamente');
         this.cdr.detectChanges();
@@ -156,14 +153,12 @@ export class SettingsComponent implements OnInit {
   }
 
   goSupport(): void {
-    // Por ahora navega a una ruta placeholder hasta implementar el chat
     this.router.navigate(['/settings/support']);
   }
 
   private setMessage(type: 'success' | 'error', text: string) {
     this.message = { type, text };
     this.cdr.markForCheck();
-    // Mensaje se disipa tras 3.5s si es success, 5s si error
     const timeout = type === 'success' ? 3500 : 5000;
     setTimeout(() => {
       if (this.message?.text === text) {

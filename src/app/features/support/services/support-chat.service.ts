@@ -4,12 +4,10 @@ import { firstValueFrom } from 'rxjs';
 
 export interface ChatSummary {
   id: number;
-  // Campos que pueden venir del ChatDto de /support/chats
   clientName?: string | null;
   supportName?: string | null;
   lastMessage?: string | null;
   closed: boolean;
-  // Compatibilidad con respuestas antiguas de /chats/support/*
   clientEmail?: string | null;
   supportEmail?: string | null;
 }
@@ -23,7 +21,6 @@ export interface ChatMessage {
 
 @Injectable({ providedIn: 'root' })
 export class SupportChatService {
-  // Usamos el controlador dedicado a soporte
   private readonly API = 'http://localhost:8080/support/chats';
   private http = inject(HttpClient);
 

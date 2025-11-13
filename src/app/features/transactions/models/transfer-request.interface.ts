@@ -3,5 +3,5 @@ export interface TransferRequest {
     receiverAlias?: string;
     description: string;
     amount: number;
-    operationId?: string; // idempotency key
+    operationId?: string;
 }
