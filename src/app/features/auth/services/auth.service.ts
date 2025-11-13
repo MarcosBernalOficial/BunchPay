@@ -36,7 +36,15 @@ export class AuthService {
      * Registrar nuevo usuario
      */
     async register(userData: RegisterUser): Promise<void> {
-        await firstValueFrom(this.http.post(`${this.API_URL}/register`, userData));
+        try {
+            await firstValueFrom(this.http.post(`${this.API_URL}/register`, userData));
+        } catch (e: any) {
+            const status = e?.status;
+            const field = e?.error?.field;
+            const backendMsg = e?.error?.message || e?.message;
+            const message = backendMsg || (status === 409 ? 'Ya existe un registro con esos datos.' : 'No se pudo completar el registro.');
+            throw { status, field, message };
+        }
     }
 
     /**

@@ -23,6 +23,9 @@ export const routes: Routes = [
     { path: 'admin', redirectTo: 'admin/supports', pathMatch: 'full' },
     // Placeholders para que los routerLink no rompan hasta crear los módulos
     { path: 'transactions/transfer', loadComponent: () => import('./features/transactions/components/transfer/transfer.component').then(c => c.TransferComponent), canActivate: [AuthGuard] },
+    { path: 'transactions/history', loadComponent: () => import('./features/transactions/components/history/transactions-history.component').then(c => c.TransactionsHistoryComponent), canActivate: [AuthGuard] },
+    { path: 'account/card', loadComponent: () => import('./features/account/components/cards/cards.component').then(c => c.CardsComponent), canActivate: [AuthGuard] },
+    { path: 'services/recharge', loadComponent: () => import('./features/services/components/recharge/recharge.component').then(c => c.RechargeComponent), canActivate: [AuthGuard] },
     { path: 'benefits', redirectTo: 'dashboard', pathMatch: 'full' },
     { path: 'crypto', redirectTo: 'dashboard', pathMatch: 'full' },
     // { path: 'settings', redirectTo: 'dashboard', pathMatch: 'full' },

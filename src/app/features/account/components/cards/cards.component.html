@@ -1,0 +1,54 @@
+<div class="min-h-screen bg-black text-white">
+  <header class="border-b border-white/10">
+    <div class="max-w-3xl mx-auto px-4 py-5 flex items-center justify-between gap-3">
+      <a routerLink="/dashboard" class="text-white border border-white px-3 py-1 hover:text-black hover:bg-white hover:rounded transition-all duration-300">Volver</a>
+      <h1 class="text-xl font-semibold">Mi Tarjeta</h1>
+      <span></span>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-4 py-6">
+    @if (loading()) {
+      <div class="text-center py-12 text-white/70">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+        <p class="mt-4">Cargando tarjeta...</p>
+      </div>
+    }
+
+    @if (error()) {
+      <div class="p-4 bg-red-900/50 border border-red-700 rounded-md text-red-300 text-center">
+        {{ error() }}
+      </div>
+    }
+
+    @if (card() && !loading()) {
+      <div class="border border-white/10 rounded-xl p-6 space-y-6">
+        <div class="bg-gradient-to-br from-purple-600 to-blue-500 rounded-xl p-6 shadow-lg">
+          <div class="text-sm text-white/70 mb-2">Bunch Pay</div>
+          <div class="text-2xl font-mono tracking-wider mb-4">{{ card()!.maskedCardNumber }}</div>
+          <div class="flex justify-between items-end">
+            <div>
+              <div class="text-xs text-white/70">Titular</div>
+              <div class="font-semibold">{{ card()!.cardHolderName }}</div>
+            </div>
+            <div>
+              <div class="text-xs text-white/70">Vencimiento</div>
+              <div class="font-semibold">{{ card()!.expirationDate }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <div class="flex justify-between py-3 border-b border-white/10">
+            <span class="text-white/70">Número completo</span>
+            <span class="font-mono">{{ card()!.cardNumber }}</span>
+          </div>
+          <div class="flex justify-between py-3 border-b border-white/10">
+            <span class="text-white/70">CVV</span>
+            <span class="font-mono">{{ card()!.cvv }}</span>
+          </div>
+        </div>
+      </div>
+    }
+  </main>
+</div>

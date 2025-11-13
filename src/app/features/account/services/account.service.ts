@@ -39,8 +39,14 @@ export class AccountService {
      * Obtener resumen de la cuenta
      */
     async loadAccountSummary(): Promise<void> {
-        const data = await firstValueFrom(this.http.get<AccountSummary>(`${this.API_URL}/accountClient/summary`));
-        this.accountSummary.set(data);
+        try {
+            const data = await firstValueFrom(this.http.get<AccountSummary>(`${this.API_URL}/accountClient/summary`));
+            this.accountSummary.set(data);
+        } catch (error) {
+            console.error('Error loading account summary:', error);
+            // Mantener el valor null en caso de error
+            this.accountSummary.set(null);
+        }
     }
 
     /**

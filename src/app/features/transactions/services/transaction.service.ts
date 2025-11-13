@@ -59,4 +59,11 @@ export class TransactionService {
     async filterTransactions(filters: any): Promise<Transaction[]> {
         return await firstValueFrom(this.http.post<Transaction[]>(`${this.API_URL}/filter`, filters));
     }
+
+    /**
+     * Obtener comprobante PDF
+     */
+    getReceipt(transactionId: number) {
+        return this.http.get(`${this.API_URL}/receipt/${transactionId}`, { responseType: 'blob' });
+    }
 }

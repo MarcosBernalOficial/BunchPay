@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { TransactionService } from '../../../transactions/services/transaction.service';
+import { getErrorMessage } from '../../../../shared/utils/error-handler';
 
 @Component({
   selector: 'app-transfer',
@@ -103,13 +104,9 @@ export class TransferComponent {
       this.form.reset();
       setTimeout(()=>{ this.successMessage.set(null); }, 4000);
     } catch (e: any) {
-      const backendMsg = e?.error?.message || e?.error || e?.message;
-      if (typeof backendMsg === 'string') {
-        this.errorMessage.set(backendMsg);
-      } else {
-        this.errorMessage.set('No se pudo realizar la transferencia.');
-      }
-      console.log('[TransferComponent] Transfer error', { ts: new Date().toISOString(), operationId, error: e });
+      console.error('[TransferComponent] Transfer error', { ts: new Date().toISOString(), operationId, error: e });
+      const errorMsg = getErrorMessage(e, 'No se pudo realizar la transferencia. Intentá nuevamente.');
+      this.errorMessage.set(errorMsg);
     } finally {
       this.loading.set(false);
       // Solo limpiar operationId si hubo éxito; si hubo error, conservarlo para reintentos idempotentes

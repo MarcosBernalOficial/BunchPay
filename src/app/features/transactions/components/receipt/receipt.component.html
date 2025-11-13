@@ -1,0 +1,36 @@
+<div class="min-h-screen bg-black text-white">
+  <header class="border-b border-white/10">
+    <div class="max-w-5xl mx-auto px-4 py-5 flex items-center justify-between gap-3">
+      <a routerLink="/transactions/history" class="text-white border border-white px-3 py-1 hover:text-black hover:bg-white hover:rounded transition-all duration-300">Volver</a>
+      <h1 class="text-xl font-semibold">Comprobante</h1>
+      <span></span>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-6">
+    @if (loading()) {
+      <div class="text-white/70">Cargando comprobante…</div>
+    } @else if (error()) {
+      <div class="text-red-400">{{ error() }}</div>
+    } @else {
+      <div class="space-y-4">
+        <div class="flex gap-3">
+          <button (click)="download()" class="px-4 py-2 bg-white text-black rounded hover:bg-white/90 transition-all">
+            Descargar PDF
+          </button>
+          <a routerLink="/transactions/history" class="px-4 py-2 border border-white/30 rounded hover:bg-white hover:text-black transition-all">
+            Ver movimientos
+          </a>
+        </div>
+        
+        @if (pdfUrl()) {
+          <iframe 
+            [src]="pdfUrl()!" 
+            class="w-full h-[75vh] border border-white/10 rounded-lg"
+            title="Comprobante de transacción">
+          </iframe>
+        }
+      </div>
+    }
+  </main>
+</div>

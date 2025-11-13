@@ -84,18 +84,17 @@
       <div class="w-2 h-2 rounded-full"
         [class.bg-green-400]="tx.type === 'DEPOSITO'"
         [class.bg-red-400]="tx.type === 'RETIRO' || tx.type === 'PAGO'"
-        [class.bg-white/50]="tx.type !== 'DEPOSITO' && tx.type !== 'RETIRO' && tx.type !== 'PAGO'">
+        [class.bg-white]="tx.type !== 'DEPOSITO' && tx.type !== 'RETIRO' && tx.type !== 'PAGO'">
             </div>
             <div class="flex-1">
               <p class="font-medium">{{ tx.description || tx.type }}</p>
               <p class="text-xs text-white/60">{{ tx.date | date:'short' }}</p>
             </div>
             <div class="font-mono"
-                 [class.text-green-400]="tx.type === 'DEPOSITO'"
-                 [class.text-red-400]="tx.type === 'RETIRO' || tx.type === 'PAGO'">
+                [class.text-green-400]="tx.type === 'DEPOSITO'"
+                [class.text-red-400]="tx.type === 'RETIRO' || tx.type === 'PAGO'">
               {{ ((tx.type === 'RETIRO' || tx.type === 'PAGO') ? '-' : '+') + (tx.amount | number:'1.2-2') }}
             </div>
-            <a routerLink="/transactions/receipt/{{ tx.transactionId }}" class="text-xs text-white/70 hover:text-white">Comprobante</a>
           </div>
           }
         } @else {
@@ -108,13 +107,17 @@
     <section class="space-y-3">
       <h3 class="text-lg font-semibold">Servicios</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <a routerLink="/services/recharge?type=sube" class="block border border-white/10 rounded-xl p-4 bg-white/5 hover:bg-white/10 transition">
+        <a [routerLink]="['/services/recharge']" [queryParams]="{type: 'sube'}" class="block border border-white/10 rounded-xl p-4 bg-white/5 hover:bg-white/10 transition">
           <div class="font-semibold">Cargar SUBE</div>
           <div class="text-sm text-white/70">Acreditá saldo a tu tarjeta SUBE</div>
         </a>
-        <a routerLink="/services/catalog" class="block border border-white/10 rounded-xl p-4 bg-white/5 hover:bg-white/10 transition">
-          <div class="font-semibold">Otros servicios</div>
-          <div class="text-sm text-white/70">Recargas y pagos varios</div>
+        <a [routerLink]="['/services/recharge']" [queryParams]="{type: 'celular'}" class="block border border-white/10 rounded-xl p-4 bg-white/5 hover:bg-white/10 transition">
+          <div class="font-semibold">Recarga de celular</div>
+          <div class="text-sm text-white/70">Recargá tu línea prepaga</div>
+        </a>
+        <a [routerLink]="['/services/recharge']" [queryParams]="{type: 'steam'}" class="block border border-white/10 rounded-xl p-4 bg-white/5 hover:bg-white/10 transition">
+          <div class="font-semibold">Steam</div>
+          <div class="text-sm text-white/70">Recargá tu billetera de Steam</div>
         </a>
       </div>
     </section>

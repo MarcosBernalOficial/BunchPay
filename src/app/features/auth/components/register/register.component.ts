@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, NgIf } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -16,6 +16,7 @@ export class RegisterComponent {
     private fb = inject(FormBuilder);
     private authService = inject(AuthService);
     private router = inject(Router);
+    private cdr = inject(ChangeDetectorRef);
 
     registerForm: FormGroup;
     showPassword = false;
@@ -103,20 +104,24 @@ export class RegisterComponent {
             try {
                 await this.authService.register(formData);
                 this.successMessage = 'Cuenta creada exitosamente. Redirigiendo al login...';
+                this.errorMessage = '';
+                this.cdr.markForCheck();
                 setTimeout(() => { this.router.navigate(['/auth/login']); }, 2000);
             } catch (error: any) {
-                // Si es conflicto por email, setear error en el control para mostrar debajo del input
-                if (error?.status === 409 && error?.error?.field === 'email') {
+                // Normalizado por el servicio: { status, field, message }
+                if (error?.status === 409 && (error?.field === 'email' || error?.message?.toLowerCase().includes('email'))) {
                     const emailCtrl = this.registerForm.get('credentials.email');
                     const mergedErrors = { ...(emailCtrl?.errors || {}), conflict: true } as any;
                     emailCtrl?.setErrors(mergedErrors);
                     emailCtrl?.markAsTouched();
                     this.errorMessage = '';
-                    return;
+                } else {
+                    this.errorMessage = error?.message || 'Error al crear la cuenta. Intenta nuevamente.';
                 }
-                this.errorMessage = error?.error?.message || 'Error al crear la cuenta. Intenta nuevamente.';
+                console.warn('[RegisterComponent] Registro fallido', error);
             } finally {
                 this.isLoading = false;
+                this.cdr.markForCheck();
             }
         })();
         } else {
