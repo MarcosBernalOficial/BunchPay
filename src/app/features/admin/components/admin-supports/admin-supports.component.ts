@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, NgFor } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { AdminSupportService, SupportDto } from '../../services/admin-support.service';
@@ -18,6 +18,7 @@ export class AdminSupportsComponent implements OnInit {
   private api = inject(AdminSupportService);
   private auth = inject(AuthService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   supports: SupportDto[] = [];
   isLoading = false;
@@ -28,15 +29,23 @@ export class AdminSupportsComponent implements OnInit {
 
   createForm: FormGroup = this.fb.group({
     personal: this.fb.group({
-      firstName: ['', [Validators.required, Validators.minLength(2)]],
-      lastName: ['', [Validators.required, Validators.minLength(2)]],
+      firstName: ['', [
+        Validators.required, 
+        Validators.minLength(2),
+        Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+$/)
+      ]],
+      lastName: ['', [
+        Validators.required, 
+        Validators.minLength(2),
+        Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+$/)
+      ]],
     }),
     credentials: this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [
         Validators.required,
         Validators.minLength(8),
-        Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])/)
+        Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
       ]],
     })
   });
@@ -54,7 +63,6 @@ export class AdminSupportsComponent implements OnInit {
   get createNeedsLowercase(): boolean { return this.createPasswordPatternError && !/[a-z]/.test(this.createPasswordValue); }
   get createNeedsUppercase(): boolean { return this.createPasswordPatternError && !/[A-Z]/.test(this.createPasswordValue); }
   get createNeedsNumber(): boolean { return this.createPasswordPatternError && !/\d/.test(this.createPasswordValue); }
-  get createNeedsSpecial(): boolean { return this.createPasswordPatternError && !/[^A-Za-z0-9]/.test(this.createPasswordValue); }
 
   ngOnInit(): void {
     this.refresh();
@@ -62,12 +70,14 @@ export class AdminSupportsComponent implements OnInit {
 
   async refresh() {
     this.isLoading = true;
+    this.cdr.markForCheck();
     try {
       this.supports = await this.api.listAll();
     } catch (err: any) {
       this.errorMessage = err?.error?.message || 'Error al cargar soportes';
     } finally {
       this.isLoading = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -104,6 +114,7 @@ export class AdminSupportsComponent implements OnInit {
           }
         } finally {
           this.isLoading = false;
+          this.cdr.markForCheck();
         }
       })();
     } else {
@@ -126,6 +137,7 @@ export class AdminSupportsComponent implements OnInit {
           this.showError(err?.error?.message || 'No se pudo actualizar');
         } finally {
           this.isLoading = false;
+          this.cdr.markForCheck();
         }
       })();
     }
@@ -134,6 +146,7 @@ export class AdminSupportsComponent implements OnInit {
   beginEdit(s: SupportDto) {
     if (String(s.role).toUpperCase().includes('ADMIN')) {
       this.errorMessage = 'No se puede editar un usuario con rol ADMIN.';
+      this.cdr.markForCheck();
       return;
     }
     this.editing = s;
@@ -146,6 +159,7 @@ export class AdminSupportsComponent implements OnInit {
     }, { emitEvent: false });
     // Hacer la contraseña opcional en modo edición
     this.applyPasswordValidatorsForMode(false);
+    this.cdr.markForCheck();
   }
 
   cancelEdit() {
@@ -156,15 +170,18 @@ export class AdminSupportsComponent implements OnInit {
     this.createForm.reset();
     // Contraseña requerida en modo creación
     this.applyPasswordValidatorsForMode(true);
+    this.cdr.markForCheck();
   }
 
   remove(s: SupportDto) {
     if (String(s.role).toUpperCase().includes('ADMIN')) {
       this.errorMessage = 'No se puede eliminar un usuario con rol ADMIN.';
+      this.cdr.markForCheck();
       return;
     }
     if (!confirm(`¿Eliminar soporte ${s.email}?`)) return;
     this.isLoading = true;
+    this.cdr.markForCheck();
     (async () => {
       try {
         await this.api.remove(s.id!);
@@ -174,6 +191,7 @@ export class AdminSupportsComponent implements OnInit {
         this.showError(err?.error?.message || 'No se pudo eliminar');
       } finally {
         this.isLoading = false;
+        this.cdr.markForCheck();
       }
     })();
   }
@@ -189,12 +207,12 @@ export class AdminSupportsComponent implements OnInit {
       ctrl.setValidators([
         Validators.required,
         Validators.minLength(8),
-        Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])/)
+        Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
       ]);
     } else {
       ctrl.setValidators([
         Validators.minLength(8),
-        Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])/)
+        Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
       ]);
     }
     ctrl.updateValueAndValidity({ emitEvent: false });
@@ -202,18 +220,27 @@ export class AdminSupportsComponent implements OnInit {
 
   private showSuccess(msg: string) {
     this.successMessage = msg;
+    this.cdr.markForCheck();
     if (this.successTimeout) clearTimeout(this.successTimeout);
-    this.successTimeout = setTimeout(() => { this.successMessage = ''; }, 5000);
+    this.successTimeout = setTimeout(() => { 
+      this.successMessage = ''; 
+      this.cdr.markForCheck();
+    }, 5000);
   }
 
   private showError(msg: string) {
     this.errorMessage = msg;
+    this.cdr.markForCheck();
     if (this.errorTimeout) clearTimeout(this.errorTimeout);
-    this.errorTimeout = setTimeout(() => { this.errorMessage = ''; }, 5000);
+    this.errorTimeout = setTimeout(() => { 
+      this.errorMessage = ''; 
+      this.cdr.markForCheck();
+    }, 5000);
   }
 
   private clearError() {
     if (this.errorTimeout) clearTimeout(this.errorTimeout);
     this.errorMessage = '';
+    this.cdr.markForCheck();
   }
 }
