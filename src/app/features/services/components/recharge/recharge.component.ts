@@ -25,7 +25,7 @@ export class RechargeComponent implements OnInit {
   rechargeType = signal<string>('sube');
 
   form = this.fb.group({
-    destination: ['', [Validators.required]],
+    destination: ['', [Validators.required, this.validateDestination.bind(this)]],
     amount: [null as number | null, [Validators.required, Validators.min(1)]],
   });
 
@@ -64,14 +64,62 @@ export class RechargeComponent implements OnInit {
   get identifierPlaceholder(): string {
     switch (this.rechargeType()) {
       case 'sube': return '6061 2345 6789 0123';
-      case 'celular': return '1112345678';
+      case 'celular': return 'Ej: 2234567890 o 1154321098';
       case 'steam': return 'usuario@gmail.com';
       default: return 'Referencia del servicio';
     }
   }
 
+  validateDestination(control: any): { [key: string]: any } | null {
+    const value = control.value;
+    if (!value) return null;
+
+    const type = this.rechargeType();
+
+    // Validación para celular: solo números, entre 8 y 13 dígitos (permite diferentes códigos de área)
+    if (type === 'celular') {
+      const phoneRegex = /^\d{8,13}$/;
+      if (!phoneRegex.test(value.replace(/\s/g, ''))) {
+        return { invalidPhone: true };
+      }
+    }
+
+    // Validación para Steam: debe ser Gmail
+    if (type === 'steam') {
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+      if (!emailRegex.test(value.trim())) {
+        return { invalidSteam: true };
+      }
+    }
+
+    // Validación para SUBE: exactamente 16 dígitos
+    if (type === 'sube') {
+      const subeNumber = value.replace(/\s/g, '');
+      if (!/^\d{16}$/.test(subeNumber)) {
+        return { invalidSube: true };
+      }
+    }
+
+    return null;
+  }
+
+  get destinationError(): string | null {
+    const control = this.form.get('destination');
+    if (!control?.touched || !control?.errors) return null;
+
+    if (control.errors['required']) return 'Este campo es requerido';
+    if (control.errors['invalidPhone']) return 'Número de celular inválido (8-13 dígitos)';
+    if (control.errors['invalidSteam']) return 'Debe ser un correo de Gmail válido';
+    if (control.errors['invalidSube']) return 'Número de tarjeta SUBE inválido (16 dígitos)';
+
+    return null;
+  }
+
   submit(): void {
-    if (this.form.invalid || this.loading()) return;
+    if (this.form.invalid || this.loading()) {
+      this.form.markAllAsTouched();
+      return;
+    }
 
     this.loading.set(true);
     this.error.set(null);

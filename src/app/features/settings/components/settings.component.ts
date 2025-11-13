@@ -36,9 +36,17 @@ export class SettingsComponent implements OnInit {
   message: { type: 'success' | 'error'; text: string } | null = null;
 
   profileForm = this.fb.group({
-    firstName: ['', [Validators.required, Validators.maxLength(50)]],
-    lastName: ['', [Validators.required, Validators.maxLength(50)]],
-    dni: ['', [Validators.required, Validators.maxLength(20)]],
+    firstName: ['', [
+      Validators.required, 
+      Validators.minLength(2),
+      Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+$/)
+    ]],
+    lastName: ['', [
+      Validators.required, 
+      Validators.minLength(2),
+      Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+$/)
+    ]],
+    dni: [{ value: '', disabled: true }],
     email: [{ value: '', disabled: true }],
   });
 
@@ -49,10 +57,18 @@ export class SettingsComponent implements OnInit {
       [
         Validators.required,
         Validators.minLength(8),
-        Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/)
+        Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
       ]
     ],
   });
+
+  // Getters para mensajes de validación de contraseña
+  get newPasswordCtrl() { return this.passwordForm.get('newPassword'); }
+  get newPasswordValue(): string { return (this.newPasswordCtrl?.value as string) || ''; }
+  get newPasswordPatternError(): boolean { return !!this.newPasswordCtrl?.errors?.['pattern']; }
+  get newPasswordNeedsLowercase(): boolean { return this.newPasswordPatternError && !/[a-z]/.test(this.newPasswordValue); }
+  get newPasswordNeedsUppercase(): boolean { return this.newPasswordPatternError && !/[A-Z]/.test(this.newPasswordValue); }
+  get newPasswordNeedsNumber(): boolean { return this.newPasswordPatternError && !/\d/.test(this.newPasswordValue); }
 
   ngOnInit(): void {
     this.loadProfile();
@@ -82,18 +98,17 @@ export class SettingsComponent implements OnInit {
       this.profileForm.markAllAsTouched();
       return;
     }
-    const { firstName, lastName, dni } = this.profileForm.getRawValue();
+    const { firstName, lastName } = this.profileForm.getRawValue();
     this.savingProfile = true;
     this.setMessage('success', 'Guardando perfil...');
     this.cdr.markForCheck();
     (async () => {
       try {
-        const updated = await this.accountService.updateProfile({ firstName: firstName!, lastName: lastName!, dni: dni! });
+        const updated = await this.accountService.updateProfile({ firstName: firstName!, lastName: lastName! });
         // Refrescar formulario con la respuesta del backend por si normaliza/corrige datos
         this.profileForm.patchValue({
           firstName: updated.firstName,
-          lastName: updated.lastName,
-          dni: updated.dni
+          lastName: updated.lastName
         });
         // Refrescar resumen global (header, etc.) si lo usa la app
         try { await this.accountService.loadAccountSummary(); } catch {}

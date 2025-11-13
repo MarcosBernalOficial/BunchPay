@@ -4,16 +4,28 @@
     <main class="max-w-3xl mx-auto px-4 py-6">
         <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-5">
 
-        <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
-            <div>
-            <label class="block text-sm text-white/70 mb-1">Alias de destino</label>
-            <input type="text" formControlName="receiverAlias" class="w-full rounded-md bg-white/5 border border-white/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/30" placeholder="alias.destino.bpay" />
-            <div class="text-xs text-white/50 mt-1">Podés completar Alias o CVU (uno de los dos).</div>
-            </div>
-            <div>
-            <label class="block text-sm text-white/70 mb-1">CVU de destino</label>
-            <input type="text" formControlName="receiverCVU" class="w-full rounded-md bg-white/5 border border-white/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/30" placeholder="0000000000000000000000" />
-            </div>
+        <div>
+            <label class="block text-sm text-white/70 mb-1">Alias o CVU de destino</label>
+            <input 
+                type="text" 
+                formControlName="receiverAliasOrCvu" 
+                class="w-full rounded-md bg-white/5 border border-white/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/30"
+                [class.border-red-500]="aliasOrCvu?.touched && aliasOrCvu?.invalid"
+                placeholder="alias.destino.bpay o 0000000000000000000000" />
+            @if (aliasOrCvu?.touched && aliasOrCvu?.invalid) {
+                <div class="text-xs text-red-400 mt-1">
+                    @if (aliasOrCvu?.hasError('required')) {
+                        <span>Ingresá un Alias o CVU de destino</span>
+                    }
+                    @if (aliasOrCvu?.hasError('invalidCvuOrAlias')) {
+                        <span>Formato inválido. El Alias debe tener mínimo 6 caracteres (letras, números, . o _) o un CVU de 22 dígitos</span>
+                    }
+                </div>
+            } @else {
+                <div class="text-xs text-white/50 mt-1">
+                    Alias: mínimo 6 caracteres (letras, números, . o _) · CVU: 22 dígitos
+                </div>
+            }
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-1 gap-4">

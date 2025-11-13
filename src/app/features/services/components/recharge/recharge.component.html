@@ -46,8 +46,8 @@
             class="w-full rounded-md bg-white/5 border border-white/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/30"
             [class.border-red-500]="form.get('destination')?.invalid && form.get('destination')?.touched"
           />
-          @if (form.get('destination')?.invalid && form.get('destination')?.touched) {
-            <div class="text-xs text-red-400 mt-1">Este campo es requerido</div>
+          @if (destinationError) {
+            <div class="text-xs text-red-400 mt-1">{{ destinationError }}</div>
           }
         </div>
 

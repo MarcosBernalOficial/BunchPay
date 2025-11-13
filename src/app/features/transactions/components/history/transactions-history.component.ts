@@ -19,7 +19,10 @@ export class TransactionsHistoryComponent implements OnInit {
   loading = signal(false);
   error = signal<string | null>(null);
 
-  transactions = computed(() => this.txService.transactions());
+  transactions = computed(() => {
+    const txs = this.txService.transactions();
+    return [...txs].reverse();
+  });
 
   async ngOnInit() {
     this.loading.set(true);
