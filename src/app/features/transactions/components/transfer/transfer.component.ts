@@ -5,6 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { TransactionService } from '../../../transactions/services/transaction.service';
 import { getErrorMessage } from '../../../../shared/utils/error-handler';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
+import { aliasOrCvuValidator } from '../../validators/aliasOrCvuValidator';
 
 @Component({
   selector: 'app-transfer',
@@ -28,14 +29,12 @@ export class TransferComponent {
   private static readonly OP_ID_TTL_MS = 20000; // 20s ventana de idempotencia en el cliente
 
   form = this.fb.group({
-    receiverAlias: [''],
-    receiverCVU: [''],
+    receiverAliasOrCvu: ['', [Validators.required, aliasOrCvuValidator]],
     amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
     description: ['', [Validators.maxLength(120)]]
   });
 
-  get alias() { return this.form.get('receiverAlias'); }
-  get cvu() { return this.form.get('receiverCVU'); }
+  get aliasOrCvu() { return this.form.get('receiverAliasOrCvu'); }
   get amount() { return this.form.get('amount'); }
 
   async submit() {
@@ -48,7 +47,7 @@ export class TransferComponent {
       return;
     }
 
-  const { receiverAlias, receiverCVU, amount, description } = this.form.value;
+  const { receiverAliasOrCvu, amount, description } = this.form.value;
   // Reutilizar operationId entre reintentos por una ventana corta
   const now = Date.now();
   if (!this.pendingOperationId) {
@@ -78,24 +77,24 @@ export class TransferComponent {
     ts: new Date().toISOString(),
     operationId,
     payload: {
-      receiverAlias: receiverAlias || undefined,
-      receiverCVU: receiverCVU || undefined,
+      receiverAliasOrCvu: receiverAliasOrCvu || undefined,
       description: description || '',
       amount
     },
     loadingBefore: this.loading()
   });
 
-    if ((!receiverAlias || receiverAlias.trim()==='') && (!receiverCVU || receiverCVU.trim()==='')) {
+    if (!receiverAliasOrCvu) {
       this.errorMessage.set('Ingresá un Alias o un CVU de destino.');
       return;
     }
 
     this.loading.set(true);
     try {
+      const isCvu = /^\d{22}$/.test(receiverAliasOrCvu?.trim() || '');
       const msg = await this.txService.makeTransfer({
-        receiverAlias: receiverAlias || undefined,
-        receiverCVU: receiverCVU || undefined,
+        receiverAlias: !isCvu ? receiverAliasOrCvu : undefined,
+        receiverCVU: isCvu ? receiverAliasOrCvu : undefined,
         description: description || '',
         amount: amount as number,
         operationId
