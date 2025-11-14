@@ -123,20 +123,43 @@ export class SettingsComponent implements OnInit {
   changePassword(): void {
     if (this.passwordForm.invalid) {
       this.passwordForm.markAllAsTouched();
+      this.cdr.markForCheck();
       return;
     }
     const { currentPassword, newPassword } = this.passwordForm.getRawValue();
     this.changingPassword = true;
-    this.setMessage('success', 'Guardando contraseña...');
+    this.message = { type: 'success', text: 'Guardando contraseña...' };
     this.cdr.markForCheck();
     (async () => {
       try {
         await this.accountService.changePassword({ currentPassword: currentPassword!, newPassword: newPassword! });
         this.setMessage('success', 'Contraseña actualizada correctamente');
-        this.passwordForm.reset();
+        // Resetear el formulario completamente
+        this.passwordForm.reset({
+          currentPassword: '',
+          newPassword: ''
+        });
+        // Marcar como pristine y untouched
+        this.passwordForm.markAsPristine();
+        this.passwordForm.markAsUntouched();
         this.cdr.detectChanges();
-      } catch {
-        this.setMessage('error', 'No se pudo cambiar la contraseña. Verificá la actual.');
+      } catch (error: any) {
+        console.error('Error al cambiar contraseña:', error);
+        // Extraer mensaje de error específico del backend
+        let errorMsg = 'No se pudo cambiar la contraseña.';
+        if (error?.status === 401) {
+          errorMsg = 'La contraseña actual es incorrecta.';
+        } else if (error?.error?.message) {
+          errorMsg = error.error.message;
+        } else if (error?.message) {
+          errorMsg = error.message;
+        }
+        this.setMessage('error', errorMsg);
+        // Limpiar solo el campo de contraseña actual si falló por credenciales incorrectas
+        if (error?.status === 401) {
+          this.passwordForm.patchValue({ currentPassword: '' });
+          this.passwordForm.get('currentPassword')?.markAsUntouched();
+        }
       } finally {
         this.changingPassword = false;
         this.cdr.detectChanges();

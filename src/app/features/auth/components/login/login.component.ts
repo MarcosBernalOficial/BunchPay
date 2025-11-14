@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -16,6 +16,7 @@ export class LoginComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   loginForm: FormGroup;
   showPassword = false;
@@ -60,6 +61,7 @@ export class LoginComponent {
     if (this.loginForm.valid) {
       this.isLoading = true;
       this.errorMessage = '';
+      this.cdr.markForCheck();
 
       const { credentials } = this.loginForm.value as any;
       const { email, password } = credentials;
@@ -68,6 +70,7 @@ export class LoginComponent {
         try {
           await this.authService.login({ email, password });
           this.isLoading = false;
+          this.cdr.markForCheck();
           if (this.authService.hasRole('ADMIN')) {
             this.router.navigate(['/admin/supports']);
           } else if (this.authService.hasRole('SUPPORT')) {
@@ -76,13 +79,27 @@ export class LoginComponent {
             this.router.navigate(['/dashboard']);
           }
         } catch (error: any) {
+          console.error('Error en login:', error);
           this.isLoading = false;
-          this.errorMessage = error?.error?.message || 'Error de autenticación. Verifica tus credenciales.';
+          // Extraer el mensaje de error del backend
+          if (error?.error?.message) {
+            this.errorMessage = error.error.message;
+          } else if (error?.message) {
+            this.errorMessage = error.message;
+          } else if (error?.status === 500) {
+            this.errorMessage = 'Error del servidor. Por favor, verifica tus credenciales.';
+          } else if (error?.status === 401) {
+            this.errorMessage = 'Email o contraseña incorrectos.';
+          } else {
+            this.errorMessage = 'Error de autenticación. Verifica tus credenciales.';
+          }
+          this.cdr.markForCheck();
         }
       })();
     } else {
       // Marcar todos los campos como touched para mostrar errores
       markAllAsTouched(this.loginForm);
+      this.cdr.markForCheck();
     }
   }
 }
