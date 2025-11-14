@@ -157,7 +157,7 @@
         [class.bg-white]="tx.type !== 'DEPOSITO' && tx.type !== 'RETIRO' && tx.type !== 'PAGO'">
             </div>
             <div class="flex-1">
-              <p class="font-medium">{{ tx.description || tx.type }}</p>
+              <p class="font-medium">{{ getTransactionName(tx) }}</p>
               <p class="text-xs text-white/60">{{ tx.date | date:'short' }}</p>
             </div>
             <div class="font-mono"

@@ -28,6 +28,11 @@ export class TransactionsHistoryComponent implements OnInit {
     this.error.set(null);
     try {
       await this.txService.loadTransactionHistory();
+      // Log para ver qué datos llegan
+      console.log('Transacciones cargadas:', this.transactions());
+      if (this.transactions().length > 0) {
+        console.log('Primera transacción:', this.transactions()[0]);
+      }
     } catch (e: any) {
       const msg = e?.error?.message || e?.message || 'No se pudieron cargar los movimientos.';
       this.error.set(typeof msg === 'string' ? msg : 'No se pudieron cargar los movimientos.');
@@ -38,5 +43,28 @@ export class TransactionsHistoryComponent implements OnInit {
 
   isNegative(t: Transaction) {
     return t.type === TransactionType.RETIRO || t.type === TransactionType.PAGO;
+  }
+
+  getTransactionName(t: Transaction): string {
+    const currentUserCvu = this.txService.getCurrentUserCvu();
+    if (!currentUserCvu) return t.description || t.type;
+    
+    // Si tiene datos de sender y receiver, es una transferencia entre usuarios
+    // (puede venir como TRANSFERENCIA, RETIRO o DEPOSITO)
+    if (t.senderCvu && t.recieverCvu && 
+        (t.senderFirstName || t.recieverFirstName)) {
+      
+      // Si soy el sender (RETIRO), mostrar el receptor
+      if (t.senderCvu === currentUserCvu && t.recieverFirstName) {
+        return `${t.recieverFirstName} ${t.recieverLastName}`;
+      }
+      // Si soy el receiver (DEPOSITO), mostrar el sender
+      if (t.recieverCvu === currentUserCvu && t.senderFirstName) {
+        return `${t.senderFirstName} ${t.senderLastName}`;
+      }
+    }
+    
+    // Para otros tipos (pagos, servicios), usar la descripción original
+    return t.description || t.type;
   }
 }

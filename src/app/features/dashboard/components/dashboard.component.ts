@@ -100,6 +100,29 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  getTransactionName(tx: Transaction): string {
+    const currentUserCvu = this.accountSummary()?.cvu;
+    if (!currentUserCvu) return tx.description || tx.type;
+    
+    // Si tiene datos de sender y receiver, es una transferencia entre usuarios
+    // (puede venir como TRANSFERENCIA, RETIRO o DEPOSITO)
+    if (tx.senderCvu && tx.recieverCvu && 
+        (tx.senderFirstName || tx.recieverFirstName)) {
+      
+      // Si soy el sender (RETIRO), mostrar el receptor
+      if (tx.senderCvu === currentUserCvu && tx.recieverFirstName) {
+        return `${tx.recieverFirstName} ${tx.recieverLastName}`;
+      }
+      // Si soy el receiver (DEPOSITO), mostrar el sender
+      if (tx.recieverCvu === currentUserCvu && tx.senderFirstName) {
+        return `${tx.senderFirstName} ${tx.senderLastName}`;
+      }
+    }
+    
+    // Para otros tipos (pagos, servicios), usar la descripción original
+    return tx.description || tx.type;
+  }
+
   copyCvu(): void {
     const cvu = this.accountSummary()?.cvu;
     if (cvu) {

@@ -10,16 +10,53 @@
       @if (transactions().length === 0) {
         <div class="text-white/70">Todavía no tenés movimientos.</div>
       } @else {
-        <ul class="divide-y divide-white/10 rounded-md border border-white/10">
+        <ul class="space-y-3">
           @for (t of transactions(); track t.transactionId) {
-            <li class="px-4 py-3 flex items-center justify-between">
-              <div>
-                <div class="text-sm text-white/90">{{ t.description || '-' }}</div>
-                <div class="text-xs text-white/50">{{ t.date | date:'short' }} • {{ t.type }}</div>
+            <li class="border border-white/10 rounded-lg p-4 bg-white/5">
+              <div class="flex justify-between items-start mb-2">
+                <div class="text-xs text-white/50">{{ t.date | date:'short' }}</div>
+                <div [class]="isNegative(t) ? 'text-red-400 font-bold text-lg' : 'text-green-400 font-bold text-lg'">
+                  {{ isNegative(t) ? '-' : '+' }}${{ t.amount | number:'1.2-2' }}
+                </div>
               </div>
-              <div [class]="isNegative(t) ? 'text-red-400 font-medium' : 'text-green-400 font-medium'">
-                {{ isNegative(t) ? '-' : '+' }}${{ t.amount | number:'1.2-2' }}
-              </div>
+              
+              @if (t.senderCvu || t.recieverCvu) {
+                <!-- Es una transferencia entre usuarios -->
+                <div class="space-y-2 text-sm">
+                  @if (t.senderFirstName || t.senderLastName || t.senderCvu) {
+                    <div class="grid grid-cols-[80px_1fr] gap-2">
+                      <span class="text-white/50">Remitente:</span>
+                      <span class="text-white/90">{{ (t.senderFirstName || '') + ' ' + (t.senderLastName || '') || 'N/A' }}</span>
+                    </div>
+                    @if (t.senderCvu) {
+                      <div class="grid grid-cols-[80px_1fr] gap-2">
+                        <span class="text-white/50">CVU:</span>
+                        <span class="text-white/70 font-mono text-xs">{{ t.senderCvu }}</span>
+                      </div>
+                    }
+                  }
+                  @if ((t.senderFirstName || t.senderCvu) && (t.recieverFirstName || t.recieverCvu)) {
+                    <div class="border-t border-white/10 my-2"></div>
+                  }
+                  @if (t.recieverFirstName || t.recieverLastName || t.recieverCvu) {
+                    <div class="grid grid-cols-[80px_1fr] gap-2">
+                      <span class="text-white/50">Destinatario:</span>
+                      <span class="text-white/90">{{ (t.recieverFirstName || '') + ' ' + (t.recieverLastName || '') || 'N/A' }}</span>
+                    </div>
+                    @if (t.recieverCvu) {
+                      <div class="grid grid-cols-[80px_1fr] gap-2">
+                        <span class="text-white/50">CVU:</span>
+                        <span class="text-white/70 font-mono text-xs">{{ t.recieverCvu }}</span>
+                      </div>
+                    }
+                  }
+                </div>
+              } @else {
+                <!-- Otros tipos de transacciones (servicios, pagos) -->
+                <div class="text-sm text-white/90">
+                  {{ t.description || t.type }}
+                </div>
+              }
             </li>
           }
         </ul>

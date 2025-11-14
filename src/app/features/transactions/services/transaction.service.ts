@@ -57,4 +57,18 @@ export class TransactionService {
     getReceipt(transactionId: number) {
         return this.http.get(`${this.API_URL}/receipt/${transactionId}`, { responseType: 'blob' });
     }
+
+    /* Obtener CVU del usuario actual desde sessionStorage */
+    getCurrentUserCvu(): string | null {
+        try {
+            const userStr = sessionStorage.getItem('currentUser');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                return user.cvu || null;
+            }
+        } catch (e) {
+            console.error('Error getting current user CVU:', e);
+        }
+        return null;
+    }
 }

@@ -66,10 +66,17 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
       this.cdr.markForCheck();
     }
     try {
-      this.unassigned = await this.api.getUnassigned();
+      const unassignedList = await this.api.getUnassigned();
+      // Filtrar chats que tengan al menos un mensaje
+      this.unassigned = unassignedList.filter(chat => chat.lastMessage && chat.lastMessage.trim() !== '');
     } catch { /* ignore */ }
     try {
-      this.myChats = await this.api.getMyChats();
+      const myChatsRaw = await this.api.getMyChats();
+      // Ordenar: primero los abiertos (!closed), luego los cerrados (closed)
+      this.myChats = myChatsRaw.sort((a, b) => {
+        if (a.closed === b.closed) return 0;
+        return a.closed ? 1 : -1; // Si a está cerrado, va después (1); si está abierto, va antes (-1)
+      });
     } catch { /* ignore */ }
     this.loadingLists = false;
     this.cdr.markForCheck();
@@ -93,26 +100,55 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
   }
 
   async pick(chat: ChatSummary) {
+    console.log('Pick chat:', chat.id, 'closed:', chat.closed);
+    
     // Cancelar subscripción previa si había otro chat
     if (this.selected) {
       this.ws.unsubscribeFromChat(this.selected.id);
     }
+    
+    // Resetear estado
     this.selected = chat;
     this.messages = [];
     this.loadingMessages = true;
-    this.cdr.markForCheck();
+    
+    // Forzar actualización inmediata del UI
+    this.cdr.detectChanges();
+    
     try {
       this.messages = await this.api.getMessages(chat.id);
-    } catch { this.messages = []; }
-    this.loadingMessages = false;
-    this.cdr.markForCheck();
+      console.log('Mensajes cargados para chat', chat.id, ':', this.messages.length);
+    } catch (e) { 
+      console.error('Error cargando mensajes para chat', chat.id, ':', e);
+      this.messages = []; 
+    } finally {
+      // Asegurar que loadingMessages se resetea siempre
+      this.loadingMessages = false;
+      console.log('Loading messages set to false');
+      // Forzar detección completa de cambios
+      this.cdr.detectChanges();
+    }
+    
     // Suscribirse a mensajes nuevos
     try {
       this.ws.subscribeToChat(chat.id).subscribe(msg => {
-        this.messages = [...this.messages, msg];
-        this.cdr.markForCheck();
+        console.log('Nuevo mensaje recibido:', msg.id || msg.content?.substring(0, 20));
+        // Verificar si el mensaje ya existe para evitar duplicados
+        const messageExists = this.messages.some(m => 
+          (m.id && msg.id && m.id === msg.id) || 
+          (m.content === msg.content && m.date === msg.date)
+        );
+        
+        if (!messageExists) {
+          this.messages = [...this.messages, msg];
+          this.cdr.markForCheck();
+        } else {
+          console.log('Mensaje duplicado ignorado');
+        }
       });
-    } catch { /* ignore ws errors */ }
+    } catch (e) { 
+      console.error('Error suscribiendo a chat', chat.id, ':', e);
+    }
   }
 
   async assignSelected() {
@@ -154,8 +190,16 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
         // Suscribirse a mensajes nuevos del chat asignado
         try {
           this.ws.subscribeToChat(assignedId).subscribe(msg => {
-            this.messages = [...this.messages, msg];
-            this.cdr.markForCheck();
+            // Verificar si el mensaje ya existe para evitar duplicados
+            const messageExists = this.messages.some(m => 
+              (m.id && msg.id && m.id === msg.id) || 
+              (m.content === msg.content && m.date === msg.date)
+            );
+            
+            if (!messageExists) {
+              this.messages = [...this.messages, msg];
+              this.cdr.markForCheck();
+            }
           });
         } catch { /* ignore ws errors */ }
         
@@ -195,8 +239,16 @@ export class SupportHomeComponent implements OnInit, OnDestroy {
           // Suscribirse a mensajes nuevos
           try {
             this.ws.subscribeToChat(assignedId).subscribe(msg => {
-              this.messages = [...this.messages, msg];
-              this.cdr.markForCheck();
+              // Verificar si el mensaje ya existe para evitar duplicados
+              const messageExists = this.messages.some(m => 
+                (m.id && msg.id && m.id === msg.id) || 
+                (m.content === msg.content && m.date === msg.date)
+              );
+              
+              if (!messageExists) {
+                this.messages = [...this.messages, msg];
+                this.cdr.markForCheck();
+              }
             });
           } catch { /* ignore ws errors */ }
         }
